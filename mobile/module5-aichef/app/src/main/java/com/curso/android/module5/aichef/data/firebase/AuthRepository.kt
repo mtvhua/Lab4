@@ -36,7 +36,7 @@ import kotlinx.coroutines.tasks.await
  *
  * =============================================================================
  */
-class AuthRepository {
+class AuthRepository @javax.inject.Inject constructor() : IAuthRepository {
 
     // Instancia de Firebase Auth
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -45,13 +45,13 @@ class AuthRepository {
      * Obtiene el ID del usuario actual
      * @return userId o null si no hay sesión
      */
-    val currentUserId: String?
+    override val currentUserId: String?
         get() = auth.currentUser?.uid
 
     /**
      * Verifica si hay un usuario autenticado
      */
-    val isLoggedIn: Boolean
+    override val isLoggedIn: Boolean
         get() = auth.currentUser != null
 
     /**
@@ -68,7 +68,7 @@ class AuthRepository {
      *
      * @return Flow de AuthState
      */
-    fun observeAuthState(): Flow<AuthState> = callbackFlow {
+    override fun observeAuthState(): Flow<AuthState> = callbackFlow {
         val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
             val state = if (user != null) {
@@ -103,7 +103,7 @@ class AuthRepository {
      * @param password Contraseña del usuario
      * @return Result con el userId o un error
      */
-    suspend fun signIn(email: String, password: String): Result<String> {
+    override suspend fun signIn(email: String, password: String): Result<String> {
         return try {
             val result = auth.signInWithEmailAndPassword(email, password).await()
             val userId = result.user?.uid
@@ -125,7 +125,7 @@ class AuthRepository {
      * @param password Contraseña (mínimo 6 caracteres)
      * @return Result con el userId o un error
      */
-    suspend fun signUp(email: String, password: String): Result<String> {
+    override suspend fun signUp(email: String, password: String): Result<String> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val userId = result.user?.uid
@@ -148,7 +148,7 @@ class AuthRepository {
      * Esta operación es síncrona y siempre exitosa.
      * Después de llamar signOut(), currentUser será null.
      */
-    fun signOut() {
+    override fun signOut() {
         auth.signOut()
     }
 }

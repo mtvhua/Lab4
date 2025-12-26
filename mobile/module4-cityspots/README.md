@@ -129,7 +129,7 @@ El Repository Pattern actúa como intermediario entre la capa de presentación (
 
 ```
 app/src/main/java/com/curso/android/module4/cityspots/
-├── CitySpotsApplication.kt      # Application class
+├── CitySpotsApplication.kt      # Application class + Koin
 ├── MainActivity.kt              # Activity principal + Navigation
 │
 ├── data/
@@ -140,16 +140,20 @@ app/src/main/java/com/curso/android/module4/cityspots/
 │   └── db/
 │       └── SpotDatabase.kt      # Room Database singleton
 │
+├── di/
+│   └── AppModule.kt             # Módulo Koin (DI)
+│
 ├── repository/
-│   └── SpotRepository.kt        # Unifica BD + Cámara + GPS
+│   └── SpotRepository.kt        # Unifica BD + Cámara + GPS (DI)
 │
 ├── utils/
 │   ├── CameraUtils.kt           # Helper para CameraX
-│   └── LocationUtils.kt         # Helper para FusedLocation
+│   ├── LocationUtils.kt         # Helper para FusedLocation
+│   └── CoordinateValidator.kt   # Validación de coordenadas GPS
 │
 └── ui/
     ├── viewmodel/
-    │   └── MapViewModel.kt      # ViewModel compartido
+    │   └── MapViewModel.kt      # ViewModel con DI (Koin)
     ├── screens/
     │   ├── MapScreen.kt         # Pantalla del mapa
     │   └── CameraScreen.kt      # Pantalla de cámara
@@ -264,6 +268,73 @@ interface SpotDao {
 | Room | 2.6.1 | Base de datos local |
 | Accompanist Permissions | 0.36.0 | Permisos en Compose |
 | Coil Compose | 2.7.0 | Carga de imágenes asíncrona |
+| Koin | 4.1.1 | Inyección de dependencias |
+
+## Notas Educativas
+
+### Inyección de Dependencias con Koin
+
+Este proyecto usa **Koin** para DI (Dependency Injection). Koin es un framework liviano basado en DSL de Kotlin.
+
+**Antes (sin DI):**
+```kotlin
+class MapViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = SpotRepository(application) // ❌ Crea su dependencia
+}
+```
+
+**Después (con DI):**
+```kotlin
+class MapViewModel(
+    private val repository: SpotRepository // ✅ Recibe la dependencia
+) : ViewModel()
+```
+
+**Configuración en AppModule.kt:**
+```kotlin
+val appModule = module {
+    // Singletons
+    single { SpotDatabase.getInstance(androidContext()) }
+    single { get<SpotDatabase>().spotDao() }
+    single { CameraUtils(androidContext()) }
+    single { LocationUtils(androidContext()) }
+
+    // Repository con sus dependencias
+    single { SpotRepository(get(), get(), get(), get()) }
+
+    // ViewModel
+    viewModelOf(::MapViewModel)
+}
+```
+
+| Koin | Hilt |
+|------|------|
+| DSL de Kotlin puro | Anotaciones (@Inject, @Module) |
+| Validación en runtime | Validación en compile-time |
+| Setup rápido | Setup más complejo |
+| Ideal para proyectos medianos | Ideal para proyectos grandes |
+
+### Validación de Coordenadas GPS
+
+El `CoordinateValidator` valida que las coordenadas GPS estén dentro de rangos válidos antes de guardarlas:
+
+```kotlin
+class CoordinateValidator {
+    fun validate(latitude: Double, longitude: Double): ValidationResult {
+        // Latitud: -90° a +90°
+        // Longitud: -180° a +180°
+        // Detecta NaN, Infinity, y "Null Island" (0,0)
+    }
+}
+```
+
+**¿Por qué validar?**
+- El GPS puede reportar valores incorrectos en ciertas condiciones
+- Evita datos corruptos en la base de datos
+- Previene crashes al renderizar marcadores inválidos en el mapa
+- (0,0) es el "Null Island" - técnicamente válido pero sospechoso
+
+> **Nota**: Los tests unitarios están fuera del alcance de este módulo educativo, pero la arquitectura con DI está preparada para agregarlos fácilmente.
 
 ## Cómo Ejecutar
 

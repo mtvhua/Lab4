@@ -1,10 +1,12 @@
 package com.curso.android.module2.stream.di
 
 import com.curso.android.module2.stream.data.repository.MockMusicRepository
+import com.curso.android.module2.stream.data.repository.MusicRepository
 import com.curso.android.module2.stream.ui.viewmodel.HomeViewModel
 import com.curso.android.module2.stream.ui.viewmodel.SearchViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
@@ -78,8 +80,25 @@ val appModule = module {
      * - Los repositorios típicamente mantienen cache o estado
      * - Una instancia es suficiente para toda la app
      * - Evita duplicar datos en memoria
+     *
+     * BINDING INTERFACE
+     * -----------------
+     * Usamos `bind MusicRepository::class` para que cuando alguien pida
+     * un MusicRepository, Koin proporcione MockMusicRepository.
+     *
+     * Esto permite:
+     * 1. ViewModels dependen de MusicRepository (abstracción)
+     * 2. En desarrollo: bind a MockMusicRepository
+     * 3. En producción: cambiar a bind RemoteMusicRepository
+     * 4. En tests: inyectar un fake o mock
+     *
+     * SINTAXIS ALTERNATIVA:
+     * ```kotlin
+     * single<MusicRepository> { MockMusicRepository() }
+     * ```
+     * Ambas son equivalentes, pero singleOf + bind es más concisa.
      */
-    singleOf(::MockMusicRepository)
+    singleOf(::MockMusicRepository) bind MusicRepository::class
 
     /**
      * VIEWMODELS

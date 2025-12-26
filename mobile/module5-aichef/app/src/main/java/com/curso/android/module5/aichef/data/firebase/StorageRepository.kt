@@ -35,7 +35,7 @@ import java.io.ByteArrayOutputStream
  *
  * =============================================================================
  */
-class StorageRepository {
+class StorageRepository @javax.inject.Inject constructor() : IStorageRepository {
 
     // Referencia a Firebase Storage
     private val storage = Firebase.storage
@@ -58,7 +58,7 @@ class StorageRepository {
      * @param bitmap Imagen generada por Gemini
      * @return URL de descarga de la imagen subida
      */
-    suspend fun uploadRecipeImage(recipeId: String, bitmap: Bitmap): Result<String> {
+    override suspend fun uploadRecipeImage(recipeId: String, bitmap: Bitmap): Result<String> {
         return try {
             // Crear referencia al archivo: recipe_images/{recipeId}.jpg
             val imageRef = recipeImagesRef.child("$recipeId.jpg")
@@ -90,7 +90,7 @@ class StorageRepository {
      * @param recipeId ID de la receta
      * @return true si existe la imagen, false si no
      */
-    suspend fun imageExists(recipeId: String): Boolean {
+    override suspend fun imageExists(recipeId: String): Boolean {
         return try {
             val imageRef = recipeImagesRef.child("$recipeId.jpg")
             imageRef.metadata.await()
@@ -107,7 +107,7 @@ class StorageRepository {
      * @param recipeId ID de la receta
      * @return URL de descarga o null si no existe
      */
-    suspend fun getImageUrl(recipeId: String): String? {
+    override suspend fun getImageUrl(recipeId: String): String? {
         return try {
             val imageRef = recipeImagesRef.child("$recipeId.jpg")
             imageRef.downloadUrl.await().toString()
@@ -123,7 +123,7 @@ class StorageRepository {
      *
      * @param recipeId ID de la receta
      */
-    suspend fun deleteRecipeImage(recipeId: String): Result<Unit> {
+    override suspend fun deleteRecipeImage(recipeId: String): Result<Unit> {
         return try {
             val imageRef = recipeImagesRef.child("$recipeId.jpg")
             imageRef.delete().await()

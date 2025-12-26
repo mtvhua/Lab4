@@ -212,11 +212,13 @@ dependencies {
     // Contiene: Button, Text, Card, TopAppBar, etc.
     implementation(libs.androidx.compose.material3)
 
-    // Material Icons Extended: Colección completa de iconos
-    // Contiene: Icons.Default.Refresh, Icons.Filled.Star, etc.
-    // NOTA: Esta biblioteca es grande (~36MB). En apps de producción,
-    // considera usar solo los iconos que necesitas.
-    implementation(libs.androidx.compose.material.icons.extended)
+    // Material Icons Core: Colección de íconos más comunes
+    // Contiene: Icons.Default.Refresh, Icons.Filled.Star, Icons.Default.Add, etc.
+    //
+    // NOTA EDUCATIVA: Usamos material-icons-core (~2MB) en lugar de
+    // material-icons-extended (~36MB) porque solo necesitamos el ícono Refresh.
+    // Ver gradle/libs.versions.toml para más información sobre la diferencia.
+    implementation(libs.androidx.compose.material.icons.core)
 
     // -------------------------------------------------------------------------
     // HERRAMIENTAS DE DEBUG (solo en builds debug)

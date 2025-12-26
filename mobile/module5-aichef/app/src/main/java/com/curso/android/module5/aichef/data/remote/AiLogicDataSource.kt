@@ -37,7 +37,7 @@ import com.google.firebase.ai.type.generationConfig
  *
  * =============================================================================
  */
-class AiLogicDataSource {
+class AiLogicDataSource @javax.inject.Inject constructor() : IAiLogicDataSource {
 
     /**
      * CONCEPTO: Inicialización del modelo generativo
@@ -92,7 +92,7 @@ class AiLogicDataSource {
      * @return GeneratedRecipe con título, ingredientes y pasos
      * @throws Exception si la generación falla
      */
-    suspend fun generateRecipeFromImage(imageBitmap: Bitmap): GeneratedRecipe {
+    override suspend fun generateRecipeFromImage(imageBitmap: Bitmap): GeneratedRecipe {
         // Construir el prompt multimodal
         val prompt = content {
             // Primero la imagen
@@ -216,7 +216,7 @@ class AiLogicDataSource {
      * @return Bitmap de la imagen generada del plato
      * @throws Exception si la generación falla o no se obtiene imagen
      */
-    suspend fun generateRecipeImage(recipeTitle: String, ingredients: List<String>): Bitmap {
+    override suspend fun generateRecipeImage(recipeTitle: String, ingredients: List<String>): Bitmap {
         // Limitamos a 5 ingredientes para no sobrecargar el prompt
         val ingredientsList = ingredients.take(5).joinToString(", ")
 

@@ -121,10 +121,22 @@ androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-toolin
 # Incluye componentes como Button, Text, Card, etc.
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 
-# --- Material Icons Extended ---
-# Colección completa de Material Icons para Compose.
-# Incluye iconos como Refresh, Star, etc.
-androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+# --- Material Icons Core ---
+# Colección CORE de Material Icons para Compose.
+# Incluye los íconos más comunes como Refresh, Star, Add, etc.
+#
+# NOTA EDUCATIVA: Diferencia entre material-icons-core y material-icons-extended
+# ===============================================================================
+# - material-icons-core (~2MB): Contiene los íconos más usados (Refresh, Add, Menu, etc.)
+# - material-icons-extended (~36MB): Contiene TODOS los íconos de Material Design (2000+)
+#
+# Recomendación:
+#   - Usa material-icons-core si solo necesitas íconos comunes (como en esta app)
+#   - Usa material-icons-extended solo si necesitas íconos específicos que no están en core
+#   - En producción, considera usar íconos individuales como recursos drawable para
+#     minimizar el tamaño del APK
+# ===============================================================================
+androidx-compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core" }
 
 # -----------------------------------------------------------------------------
 # SECCIÓN DE PLUGINS
@@ -161,5 +173,5 @@ compose = [
     "androidx-compose-ui-graphics",
     "androidx-compose-ui-tooling-preview",
     "androidx-compose-material3",
-    "androidx-compose-material-icons-extended"
+    "androidx-compose-material-icons-core"
 ]

@@ -1,13 +1,12 @@
 package com.curso.android.module4.cityspots.repository
 
-import android.content.Context
 import android.location.Location
 import android.net.Uri
 import androidx.camera.core.ImageCapture
 import com.curso.android.module4.cityspots.data.dao.SpotDao
-import com.curso.android.module4.cityspots.data.db.SpotDatabase
 import com.curso.android.module4.cityspots.data.entity.SpotEntity
 import com.curso.android.module4.cityspots.utils.CameraUtils
+import com.curso.android.module4.cityspots.utils.CoordinateValidator
 import com.curso.android.module4.cityspots.utils.LocationUtils
 import kotlinx.coroutines.flow.Flow
 
@@ -36,22 +35,25 @@ import kotlinx.coroutines.flow.Flow
  * ARQUITECTURA:
  * UI (Compose) → ViewModel → Repository → { Room, CameraUtils, LocationUtils }
  *
+ * INYECCIÓN DE DEPENDENCIAS
+ * -------------------------
+ * Este Repository recibe sus dependencias via constructor, en lugar de
+ * crearlas internamente. Esto se conoce como "Constructor Injection" y es
+ * la forma preferida de DI porque:
+ *
+ * 1. **Testabilidad**: Puedes inyectar mocks/fakes en tests
+ * 2. **Flexibilidad**: Koin decide qué implementación usar
+ * 3. **Transparencia**: Las dependencias son explícitas en la firma
+ *
  * =============================================================================
  */
-class SpotRepository(context: Context) {
-
-    // =========================================================================
-    // FUENTES DE DATOS
-    // =========================================================================
-
-    // Acceso a la base de datos Room
-    private val spotDao: SpotDao = SpotDatabase.getInstance(context).spotDao()
-
-    // Utilidades de cámara para captura de fotos
-    private val cameraUtils: CameraUtils = CameraUtils(context)
-
-    // Utilidades de ubicación para GPS
-    private val locationUtils: LocationUtils = LocationUtils(context)
+class SpotRepository(
+    // Dependencias inyectadas por Koin
+    private val spotDao: SpotDao,
+    private val cameraUtils: CameraUtils,
+    private val locationUtils: LocationUtils,
+    private val coordinateValidator: CoordinateValidator
+) {
 
     // =========================================================================
     // OPERACIONES DE BASE DE DATOS (Room)
@@ -174,17 +176,18 @@ class SpotRepository(context: Context) {
      * Este método encapsula todo el flujo de creación de un spot:
      * 1. Captura la foto con CameraX
      * 2. Obtiene la ubicación GPS actual
-     * 3. Genera un título secuencial
-     * 4. Guarda todo en Room
+     * 3. Valida las coordenadas GPS
+     * 4. Genera un título secuencial
+     * 5. Guarda todo en Room
      *
      * CONCEPTO: Este es un ejemplo de cómo el Repository puede orquestar
      * múltiples fuentes de datos en una sola operación cohesiva.
      *
      * @param imageCapture Use case de ImageCapture para la captura
-     * @return SpotEntity creado con todos los datos, o null si falla la ubicación
+     * @return CreateSpotResult con el spot creado o error detallado
      * @throws Exception si falla la captura de foto
      */
-    suspend fun createSpot(imageCapture: ImageCapture): SpotEntity? {
+    suspend fun createSpot(imageCapture: ImageCapture): CreateSpotResult {
         // 1. Capturar la foto
         val photoUri = capturePhoto(imageCapture)
 
@@ -195,14 +198,27 @@ class SpotRepository(context: Context) {
         if (location == null) {
             // Limpiar la foto capturada para no dejar archivos huérfanos
             cameraUtils.deleteImage(photoUri)
-            return null
+            return CreateSpotResult.NoLocation
         }
 
-        // 3. Generar título secuencial
+        // 3. Validar coordenadas GPS
+        val validationResult = coordinateValidator.validate(
+            latitude = location.latitude,
+            longitude = location.longitude
+        )
+
+        if (validationResult != CoordinateValidator.ValidationResult.Valid) {
+            // Limpiar la foto si las coordenadas son inválidas
+            cameraUtils.deleteImage(photoUri)
+            val errorMessage = coordinateValidator.getErrorMessage(validationResult)
+            return CreateSpotResult.InvalidCoordinates(errorMessage)
+        }
+
+        // 4. Generar título secuencial
         val spotNumber = getSpotCount() + 1
         val title = "Spot #$spotNumber"
 
-        // 4. Crear y guardar la entidad
+        // 5. Crear y guardar la entidad
         val spot = SpotEntity(
             imageUri = photoUri.toString(),
             latitude = location.latitude,
@@ -213,6 +229,20 @@ class SpotRepository(context: Context) {
         val id = insertSpot(spot)
 
         // Retornar el spot con el ID generado
-        return spot.copy(id = id)
+        return CreateSpotResult.Success(spot.copy(id = id))
     }
+}
+
+/**
+ * Resultado de la creación de un Spot
+ *
+ * Sealed class que representa los posibles resultados de createSpot():
+ * - Success: Spot creado exitosamente
+ * - NoLocation: No se pudo obtener la ubicación GPS
+ * - InvalidCoordinates: Las coordenadas GPS son inválidas
+ */
+sealed class CreateSpotResult {
+    data class Success(val spot: SpotEntity) : CreateSpotResult()
+    data object NoLocation : CreateSpotResult()
+    data class InvalidCoordinates(val message: String) : CreateSpotResult()
 }

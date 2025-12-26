@@ -34,8 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.core.net.toUri
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.curso.android.module4.cityspots.data.entity.SpotEntity
+import org.koin.compose.viewmodel.koinViewModel
 import com.curso.android.module4.cityspots.ui.viewmodel.MapViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -80,7 +80,7 @@ import com.google.maps.android.compose.rememberMarkerState
 @Composable
 fun MapScreen(
     onNavigateToCamera: () -> Unit,
-    viewModel: MapViewModel = viewModel()
+    viewModel: MapViewModel = koinViewModel()
 ) {
     // =========================================================================
     // OBSERVAR ESTADO DEL VIEWMODEL

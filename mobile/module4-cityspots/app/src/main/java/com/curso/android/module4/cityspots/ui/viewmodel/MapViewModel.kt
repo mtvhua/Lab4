@@ -1,11 +1,10 @@
 package com.curso.android.module4.cityspots.ui.viewmodel
 
-import android.app.Application
-import android.location.Location
 import androidx.camera.core.ImageCapture
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.curso.android.module4.cityspots.data.entity.SpotEntity
+import com.curso.android.module4.cityspots.repository.CreateSpotResult
 import com.curso.android.module4.cityspots.repository.SpotRepository
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,10 +26,17 @@ import kotlinx.coroutines.launch
  * 3. Expone datos a la UI mediante StateFlow/LiveData
  * 4. No tiene referencia directa a Views/Composables
  *
- * CONCEPTO: AndroidViewModel vs ViewModel
- * - ViewModel: No tiene acceso a Context (preferido para pureza)
- * - AndroidViewModel: Tiene acceso a Application context
- *   Usamos AndroidViewModel porque necesitamos Context para el Repository
+ * CONCEPTO: ViewModel con DI (Koin)
+ * Antes usábamos AndroidViewModel para acceder al Context y crear
+ * el Repository internamente. Ahora con Koin:
+ * - Usamos ViewModel puro (sin AndroidViewModel)
+ * - El Repository se inyecta via constructor
+ * - Koin se encarga de resolver las dependencias
+ *
+ * BENEFICIOS DE ESTE ENFOQUE:
+ * 1. **Testabilidad**: Puedes inyectar un mock repository en tests
+ * 2. **Desacoplamiento**: ViewModel no conoce cómo se crea el Repository
+ * 3. **Pureza**: No hay dependencia de Application/Context
  *
  * CONCEPTO: StateFlow vs LiveData
  * - LiveData: Observable de Lifecycle (tradicional, requiere observers)
@@ -39,10 +45,10 @@ import kotlinx.coroutines.launch
  *
  * =============================================================================
  */
-class MapViewModel(application: Application) : AndroidViewModel(application) {
-
-    // Repository con acceso a BD, Cámara y Ubicación
-    private val repository = SpotRepository(application)
+class MapViewModel(
+    // Repository inyectado por Koin
+    private val repository: SpotRepository
+) : ViewModel() {
 
     // =========================================================================
     // ESTADO DE LA UI
@@ -139,18 +145,35 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
      * Crea un nuevo Spot capturando foto y ubicación
      *
      * @param imageCapture Use case de CameraX configurado
+     *
+     * MANEJO DE RESULTADOS CON SEALED CLASS
+     * -------------------------------------
+     * El Repository retorna un CreateSpotResult que puede ser:
+     * - Success: Spot creado exitosamente
+     * - NoLocation: No se pudo obtener ubicación GPS
+     * - InvalidCoordinates: Las coordenadas GPS son inválidas
+     *
+     * Usar when con sealed class garantiza manejar todos los casos.
      */
     fun createSpot(imageCapture: ImageCapture) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                val spot = repository.createSpot(imageCapture)
 
-                if (spot != null) {
-                    _captureResult.value = true
-                } else {
-                    _errorMessage.value = "No se pudo obtener la ubicación"
-                    _captureResult.value = false
+                when (val result = repository.createSpot(imageCapture)) {
+                    is CreateSpotResult.Success -> {
+                        _captureResult.value = true
+                    }
+
+                    is CreateSpotResult.NoLocation -> {
+                        _errorMessage.value = "No se pudo obtener la ubicación. Verifica que el GPS esté activado."
+                        _captureResult.value = false
+                    }
+
+                    is CreateSpotResult.InvalidCoordinates -> {
+                        _errorMessage.value = result.message
+                        _captureResult.value = false
+                    }
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Error al capturar: ${e.message}"

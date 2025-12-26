@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.curso.android.module5.aichef.domain.model.UiState
 import com.curso.android.module5.aichef.ui.viewmodel.ChefViewModel
+import com.curso.android.module5.aichef.util.ImageConstants
 
 /**
  * =============================================================================
@@ -131,7 +132,8 @@ fun GeneratorScreen(
                 }
 
                 // Redimensionar si es muy grande (Gemini tiene límites)
-                selectedBitmap = resizeBitmapIfNeeded(bitmap, maxDimension = 1024)
+                // Ver ImageConstants para documentación de límites
+                selectedBitmap = resizeBitmapIfNeeded(bitmap, maxDimension = ImageConstants.MAX_IMAGE_DIMENSION)
 
             } catch (e: Exception) {
                 e.printStackTrace()

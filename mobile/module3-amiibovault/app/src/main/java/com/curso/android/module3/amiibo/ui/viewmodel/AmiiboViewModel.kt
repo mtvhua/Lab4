@@ -3,6 +3,8 @@ package com.curso.android.module3.amiibo.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.curso.android.module3.amiibo.data.local.entity.AmiiboEntity
+import com.curso.android.module3.amiibo.domain.error.AmiiboError
+import com.curso.android.module3.amiibo.domain.error.ErrorType
 import com.curso.android.module3.amiibo.repository.AmiiboRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -83,20 +85,25 @@ sealed interface AmiiboUiState {
     ) : AmiiboUiState
 
     /**
-     * Estado de error.
-     * Se muestra cuando:
-     * - Falla la llamada a la API
-     * - No hay conexión a internet
-     * - Error de parsing o base de datos
+     * Estado de error con tipo específico.
+     *
+     * CONCEPTO: Errores Tipados en UI
+     * -------------------------------
+     * En lugar de solo un mensaje genérico, incluimos el tipo de error
+     * para que la UI pueda:
+     * 1. Mostrar iconos diferentes (WiFi off, servidor error, etc.)
+     * 2. Decidir si mostrar botón de reintentar
+     * 3. Aplicar estilos diferentes según el tipo
      *
      * @param message Mensaje de error para mostrar al usuario
+     * @param errorType Tipo de error (NETWORK, PARSE, DATABASE, UNKNOWN)
+     * @param isRetryable True si tiene sentido reintentar (ej: error de red)
      * @param cachedAmiibos Datos en cache (si existen) para mostrar junto al error
-     *
-     * Incluir cachedAmiibos permite mostrar datos viejos con un banner de error,
-     * en lugar de una pantalla de error completa.
      */
     data class Error(
         val message: String,
+        val errorType: ErrorType = ErrorType.UNKNOWN,
+        val isRetryable: Boolean = true,
         val cachedAmiibos: List<AmiiboEntity> = emptyList()
     ) : AmiiboUiState
 }
@@ -258,11 +265,44 @@ class AmiiboViewModel(
                     isRefreshing = false
                 )
 
+            } catch (e: AmiiboError) {
+                /**
+                 * MANEJO DE ERRORES TIPADOS
+                 * -------------------------
+                 * Capturamos AmiiboError (sealed class) para proporcionar:
+                 * 1. Mensajes específicos por tipo de error
+                 * 2. Indicar si se puede reintentar
+                 * 3. Tipo de error para que la UI muestre iconos apropiados
+                 *
+                 * Esto mejora la UX porque el usuario sabe:
+                 * - Si es su conexión (Network) → revisar WiFi/datos
+                 * - Si es del servidor (Parse) → esperar y reintentar después
+                 * - Si es local (Database) → reiniciar app o liberar espacio
+                 */
+                val cachedAmiibos = amiibosFromDb.value
+                val errorType = ErrorType.from(e)
+
+                // Determinar si el error es recuperable con un reintento
+                val isRetryable = when (e) {
+                    is AmiiboError.Network -> true   // Puede mejorar la conexión
+                    is AmiiboError.Parse -> false    // Requiere fix en API/app
+                    is AmiiboError.Database -> true  // Puede liberarse espacio
+                    is AmiiboError.Unknown -> true   // Vale la pena reintentar
+                }
+
+                _uiState.value = AmiiboUiState.Error(
+                    message = e.message,
+                    errorType = errorType,
+                    isRetryable = isRetryable,
+                    cachedAmiibos = cachedAmiibos
+                )
             } catch (e: Exception) {
-                // Error: mostrar mensaje con datos en cache si existen
+                // Catch-all para errores no tipados (no debería llegar aquí)
                 val cachedAmiibos = amiibosFromDb.value
                 _uiState.value = AmiiboUiState.Error(
                     message = e.message ?: "Error desconocido al cargar datos",
+                    errorType = ErrorType.UNKNOWN,
+                    isRetryable = true,
                     cachedAmiibos = cachedAmiibos
                 )
             }

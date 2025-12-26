@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,11 +22,16 @@ import com.curso.android.module5.aichef.ui.screens.HomeScreen
 import com.curso.android.module5.aichef.ui.screens.RecipeDetailScreen
 import com.curso.android.module5.aichef.ui.theme.AiChefTheme
 import com.curso.android.module5.aichef.ui.viewmodel.ChefViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * =============================================================================
  * MainActivity - Activity principal con navegación protegida
  * =============================================================================
+ *
+ * CONCEPTO: @AndroidEntryPoint
+ * Esta anotación es OBLIGATORIA para Activities/Fragments que usen Hilt.
+ * Permite que Hilt inyecte dependencias en la Activity y sus Composables.
  *
  * CONCEPTO: AuthGuard en Navigation Compose
  * La navegación debe ser "protegida" - si el usuario no está autenticado,
@@ -51,6 +56,7 @@ import com.curso.android.module5.aichef.ui.viewmodel.ChefViewModel
  *
  * =============================================================================
  */
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -117,7 +123,8 @@ fun AiChefNavigation() {
     val navController = rememberNavController()
 
     // ViewModel compartido entre todas las pantallas
-    val viewModel: ChefViewModel = viewModel()
+    // hiltViewModel() obtiene el ViewModel del grafo de Hilt
+    val viewModel: ChefViewModel = hiltViewModel()
 
     // Observar estado de autenticación
     val authState by viewModel.authState.collectAsStateWithLifecycle()

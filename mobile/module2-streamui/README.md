@@ -30,9 +30,10 @@ com.curso.android.module2.stream/
 │   ├── model/
 │   │   └── Models.kt         # Song, Category (@Serializable)
 │   └── repository/
-│       └── MockMusicRepository.kt
+│       ├── MusicRepository.kt      # Interface (abstracción)
+│       └── MockMusicRepository.kt  # Implementación con datos mock
 ├── di/
-│   └── AppModule.kt          # Módulo de Koin (2 ViewModels)
+│   └── AppModule.kt          # Módulo de Koin (interface binding)
 └── ui/
     ├── components/
     │   └── SongCoverMock.kt  # Cover generado por código
@@ -40,14 +41,67 @@ com.curso.android.module2.stream/
     │   └── Destinations.kt   # Rutas type-safe (Home, Search, Player)
     ├── screens/
     │   ├── HomeScreen.kt     # Grid de categorías (LazyColumn + LazyRow)
-    │   ├── SearchScreen.kt   # Búsqueda con TextField controlado
+    │   ├── SearchScreen.kt   # Búsqueda con estados Loading/Success/Error
     │   └── PlayerScreen.kt   # Reproductor con controles
     ├── theme/
     │   └── Theme.kt
     └── viewmodel/
         ├── HomeViewModel.kt   # sealed interface UiState
-        └── SearchViewModel.kt # data class UiState + eventos
+        └── SearchViewModel.kt # sealed interface UiState (consistente)
 ```
+
+---
+
+## Notas Educativas
+
+### Interface para Repository (Testabilidad)
+
+El proyecto implementa el **Principio de Inversión de Dependencias (DIP)** usando interfaces:
+
+```kotlin
+// Interface (abstracción)
+interface MusicRepository {
+    fun getCategories(): List<Category>
+    fun getSongById(songId: String): Song?
+    fun getAllSongs(): List<Song>
+}
+
+// Implementación concreta
+class MockMusicRepository : MusicRepository { ... }
+```
+
+**¿Por qué usar interfaces?**
+
+| Sin Interface | Con Interface |
+|---------------|---------------|
+| ViewModel depende de `MockMusicRepository` | ViewModel depende de `MusicRepository` |
+| Difícil de testear (acoplamiento fuerte) | Fácil de testear (inyectar fakes/mocks) |
+| Cambiar implementación requiere modificar ViewModel | Cambiar implementación solo requiere cambiar binding en Koin |
+
+En Koin, el binding se hace así:
+```kotlin
+singleOf(::MockMusicRepository) bind MusicRepository::class
+```
+
+> **Nota**: Los tests unitarios están fuera del alcance de este módulo educativo, pero la arquitectura está preparada para agregarlos fácilmente.
+
+### Sealed Interface para UI States
+
+Ambos ViewModels usan `sealed interface` para representar estados:
+
+```kotlin
+sealed interface SearchUiState {
+    data object Loading : SearchUiState
+    data class Success(...) : SearchUiState
+    data class Error(val message: String) : SearchUiState
+}
+```
+
+**Beneficios:**
+1. **Exhaustividad**: El compilador verifica que manejes todos los estados en `when`
+2. **Type-safety**: Cada estado tiene sus propios datos
+3. **Consistencia**: Mismo patrón en todos los ViewModels del proyecto
+4. **Preparación**: Listo para operaciones asíncronas (APIs, bases de datos)
 
 ---
 

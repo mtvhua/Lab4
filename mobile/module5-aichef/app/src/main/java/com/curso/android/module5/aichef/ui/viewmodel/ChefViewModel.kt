@@ -3,13 +3,14 @@ package com.curso.android.module5.aichef.ui.viewmodel
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.curso.android.module5.aichef.data.firebase.AuthRepository
-import com.curso.android.module5.aichef.data.firebase.FirestoreRepository
-import com.curso.android.module5.aichef.data.firebase.StorageRepository
-import com.curso.android.module5.aichef.data.remote.AiLogicDataSource
+import com.curso.android.module5.aichef.data.firebase.IAuthRepository
+import com.curso.android.module5.aichef.data.firebase.IFirestoreRepository
+import com.curso.android.module5.aichef.data.firebase.IStorageRepository
+import com.curso.android.module5.aichef.data.remote.IAiLogicDataSource
 import com.curso.android.module5.aichef.domain.model.AuthState
 import com.curso.android.module5.aichef.domain.model.Recipe
 import com.curso.android.module5.aichef.domain.model.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * =============================================================================
@@ -39,23 +41,32 @@ import kotlinx.coroutines.launch
  *
  * ARQUITECTURA:
  * UI (Compose) ──observa──> ChefViewModel ──usa──> Repositories
- *                                              ├── AuthRepository
- *                                              ├── FirestoreRepository
- *                                              └── AiLogicDataSource
+ *                                              ├── IAuthRepository
+ *                                              ├── IFirestoreRepository
+ *                                              ├── IStorageRepository
+ *                                              └── IAiLogicDataSource
+ *
+ * CONCEPTO: @HiltViewModel
+ * Esta anotación permite que Hilt inyecte dependencias en el ViewModel.
+ * Combinado con @Inject constructor, Hilt sabe cómo crear el ViewModel.
+ *
+ * BENEFICIO DE USAR INTERFACES:
+ * El ViewModel depende de interfaces (IAuthRepository, etc.) en lugar de
+ * implementaciones concretas. Esto permite:
+ * 1. Testear con mocks/fakes sin tocar Firebase real
+ * 2. Cambiar implementaciones sin modificar el ViewModel
+ * 3. Seguir el principio de Inversión de Dependencias (DIP)
  *
  * =============================================================================
  */
+@HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
-class ChefViewModel : ViewModel() {
-
-    // =========================================================================
-    // DEPENDENCIAS
-    // =========================================================================
-    // En producción, usar Dependency Injection (Hilt/Koin)
-    private val authRepository = AuthRepository()
-    private val firestoreRepository = FirestoreRepository()
-    private val storageRepository = StorageRepository()
-    private val aiLogicDataSource = AiLogicDataSource()
+class ChefViewModel @Inject constructor(
+    private val authRepository: IAuthRepository,
+    private val firestoreRepository: IFirestoreRepository,
+    private val storageRepository: IStorageRepository,
+    private val aiLogicDataSource: IAiLogicDataSource
+) : ViewModel() {
 
     // =========================================================================
     // ESTADO DE AUTENTICACIÓN

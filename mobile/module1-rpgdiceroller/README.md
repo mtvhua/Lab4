@@ -39,10 +39,11 @@ El contenido teórico y práctico para el módulo se encuentra aquí:
 
 ### Jetpack Compose
 - `remember` y `mutableStateOf` para gestión de estado
+- `rememberSaveable` para preservar estado durante cambios de configuración
 - Recomposición automática
 - Layouts: `Column`, `Box`, `Spacer`
 - Componentes: `Button`, `Text`, `Icon`, `Scaffold`, `TopAppBar`
-- Material 3 theming
+- Material 3 theming con soporte DayNight (modo oscuro automático)
 
 ## Requisitos del Sistema
 
@@ -114,6 +115,45 @@ cd RPGDiceRollerApp
 | Target SDK | 35 |
 | Min SDK | 24 |
 | JDK | 17 |
+
+## Notas Educativas
+
+### `remember` vs `rememberSaveable`
+
+En Jetpack Compose existen dos formas principales de recordar estado:
+
+| Característica | `remember` | `rememberSaveable` |
+|----------------|------------|---------------------|
+| Sobrevive recomposición | ✅ | ✅ |
+| Sobrevive rotación de pantalla | ❌ | ✅ |
+| Sobrevive proceso terminado | ❌ | ✅ |
+| Uso de memoria | Menor | Mayor |
+
+**¿Cuándo usar cada uno?**
+- `remember`: Para estados transitorios (animaciones, hover, estados de carga)
+- `rememberSaveable`: Para datos que el usuario espera conservar (formularios, selecciones, resultados)
+
+En esta app, usamos `rememberSaveable` para el valor del dado y el mensaje de resultado, pero `remember` para el estado de animación (es transitorio y aceptable que se pierda).
+
+### Material Icons: Core vs Extended
+
+Compose ofrece dos paquetes de íconos:
+
+| Paquete | Tamaño | Íconos incluidos |
+|---------|--------|------------------|
+| `material-icons-core` | ~2 MB | ~300 íconos más usados (Refresh, Add, Menu, etc.) |
+| `material-icons-extended` | ~36 MB | +2000 íconos de Material Design |
+
+**Recomendación**: Usa `material-icons-core` si solo necesitas íconos comunes. En producción, considera importar íconos individuales como recursos drawable para minimizar el tamaño del APK.
+
+### Theme.Material3.DayNight
+
+El tema `Theme.Material3.DayNight.NoActionBar` proporciona:
+- **Material 3**: Diseño moderno con Material You
+- **DayNight**: Soporte automático para modo oscuro según la configuración del sistema
+- **NoActionBar**: Sin ActionBar tradicional (usamos TopAppBar de Compose)
+
+Aunque Compose maneja su propio theming con `MaterialTheme`, el tema XML sigue siendo necesario para el splash screen, ciertas APIs del sistema, y como base de `ComponentActivity`.
 
 ## Notas para Estudiantes
 

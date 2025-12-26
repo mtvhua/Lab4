@@ -50,7 +50,7 @@ We are building a Digital D20 for RPG games.
 
 
 <!-- _class: lead -->
-# 1. Kotlin & Coroutines
+# 2. Kotlin & Coroutines
 
 ---
 
@@ -288,7 +288,7 @@ fun rollDice() {
 
 
 <!-- _class: lead -->
-# 2. Android
+# 3. Android
 
 ---
 
@@ -392,7 +392,7 @@ Log.d(TAG, "onCreate: Edge-to-Edge enabled")
 
 
 <!-- _class: lead -->
-# 3. Compose UI Basics
+# 4. Compose UI Basics
 
 ---
 
@@ -513,7 +513,7 @@ Box(
 
 
 <!-- _class: lead -->
-# 4. Deep Dive
+# 5. Deep Dive
 
 ---
 
@@ -600,78 +600,69 @@ The **Kotlin Compiler** rewrites your code.
 
 <!-- _class: lead -->
 # 6. Challenge Lab
----
-
-## Lab: RPG Character Sheet
-
-**Goal**: Transform the simple Dice Roller into a **Character Creation Screen**.
-
-**Scenario**:
-You are building the "New Character" screen for a D&D app. Players need to roll for their base stats: **Strength**, **Dexterity**, and **Intelligence**.
+## Practice & Application
 
 ---
 
-## Requirements
+## Part 1: RPG Character Sheet
 
-1.  **Three Stat Rows**:
-    *   Instead of one big number, create 3 rows (Str, Dex, Int).
-    *   Each row has a Label ("STR"), a Value ("14"), and a "Roll" button.
-2.  **Total Score**:
-    *   Display the **Sum** of all 3 stats at the bottom.
-3.  **Validation Rule (Logic)**:
-    *   If the Total < 30, show a "Re-roll recommended!" message in Red.
-    *   If Total >= 50, show "Godlike!" in Gold.
-4.  **Visual Polish**:
-    *   Use `Card` or `Row` to make the stat lines look professional.
-    *   Add logical padding.
+**Context:**
+Transform the Dice Roller into a Character Creation Screen for a D&D-style app. Players roll for base stats.
 
----
+**Your Task:**
+Build a character sheet that:
+- Displays 3 stat rows (Strength, Dexterity, Intelligence)
+- Each row has a label, value display, and individual "Roll" button
+- Shows total score at the bottom
+- Provides feedback based on total (< 30 = bad, >= 50 = godlike)
 
-## Step Playbook 
-
-**Step 1: Refactor (Applied Layouts)**
-*   Create a reusable Composable function:
-    ```kotlin
-    @Composable
-    fun StatRow(name: String, value: Int, onRoll: () -> Unit) { ... }
-    ```
-
-**Step 2: State Management (Hoisting)**
-*   Lift the state up to the parent screen.
-    ```kotlin
-    var str by remember { mutableIntStateOf(10) }
-    var dex by remember { mutableIntStateOf(10) }
-    ...
-    ```
-
-**Step 3: Logic**
-*   Calculate `val total = str + dex + int` inside parent and pass it to a footer text.
+**Files to Modify:**
+- `MainActivity.kt` (refactor into multiple Composables)
 
 ---
 
-# Part 2: The Traffic Light
+## Part 1: Definition of Done
 
-**Goal**: Create a **New Project** to master State and Effects.
+| Criteria | Description |
+|----------|-------------|
+| StatRow Composable | Reusable `StatRow(name, value, onRoll)` function exists |
+| Three stats visible | STR, DEX, INT rows displayed with values |
+| Individual rolls | Each stat has its own Roll button that only affects that stat |
+| State hoisting | Parent screen owns all 3 state variables |
+| Total calculated | Sum of all stats shown at bottom |
+| Conditional styling | Total < 30 shows red warning, >= 50 shows gold "Godlike!" |
+| Animation works | Rolling animation applies to individual stat being rolled |
 
-**Requirements**:
-1.  **State**: Define `enum class Light { Red, Yellow, Green }`.
-2.  **UI**: Draw 3 Circles (`Box` with `clip(CircleShape)`).
-    *   Active light = Bright Color / Inactive = Gray.
+---
 
----    
-3.  **Logic (The Brain)**:
-    ```kotlin
-    LaunchedEffect(Unit) { // Runs ONCE when app starts
-        while(true) { // Infinite Loop
-            state = Red
-            delay(2000)
-            state = Green
-            delay(2000)
-            state = Yellow
-            delay(1000)
-        }
-    }
-    ```
+## Part 2: Traffic Light Simulator
+
+**Context:**
+Create a NEW project from scratch to practice State management and `LaunchedEffect`.
+
+**Your Task:**
+Build a traffic light that:
+- Shows 3 circles (Red, Yellow, Green) stacked vertically
+- Automatically cycles through colors with realistic timing
+- Active light is bright, inactive lights are gray
+- Runs continuously without user interaction
+
+**Files to Create:**
+- New Android project with single `MainActivity.kt`
+
+---
+
+## Part 2: Definition of Done
+
+| Criteria | Description |
+|----------|-------------|
+| Enum defined | `enum class Light { Red, Yellow, Green }` exists |
+| Three circles | Vertical stack of 3 `Box` with `CircleShape` clip |
+| Color states | Active light = bright color, others = gray |
+| Auto cycling | `LaunchedEffect` runs infinite loop |
+| Correct timing | Red: 2s → Green: 2s → Yellow: 1s → repeat |
+| No crashes | App handles lifecycle correctly (no memory leaks) |
+| Clean UI | Centered on screen with proper spacing |
 
 
 <!-- _class: lead -->
@@ -701,3 +692,17 @@ You are building the "New Character" screen for a D&D app. Players need to roll 
 *   [List of Compose Modifiers](https://developer.android.com/jetpack/compose/modifiers-list)
 *   [State in Compose](https://developer.android.com/jetpack/compose/state)
 *   [Codelab: Jetpack Compose Basics](https://developer.android.com/codelabs/jetpack-compose-basics)
+
+---
+
+## Recommended Articles
+
+**Kotlin & Coroutines**
+*   [The Silent Killer: Coroutine Cancellation](https://medium.com/androiddevelopers/coroutines-first-things-first-e6187bf3bb21) - Android Developers
+*   [Kotlin Coroutines: Deep Dive](https://proandroiddev.com/kotlin-coroutines-deep-dive-70756d7d4c00) - ProAndroidDev
+*   [Suspend Functions Under the Hood](https://medium.com/androiddevelopers/the-suspend-modifier-under-the-hood-b7ce46af624f) - Android Developers
+
+**Jetpack Compose**
+*   [A Practical Guide to Compose State](https://proandroiddev.com/a-practical-guide-to-android-compose-state-and-remember-a0e73e57df0c) - ProAndroidDev
+*   [Jetpack Compose Phases Explained](https://medium.com/androiddevelopers/jetpack-compose-phases-7c3f0c9c4d3c) - Android Developers
+*   [Compose Modifiers Deep Dive](https://dev.to/zachklipp/compose-modifiers-deep-dive-3m3l) - Zach Klippenstein

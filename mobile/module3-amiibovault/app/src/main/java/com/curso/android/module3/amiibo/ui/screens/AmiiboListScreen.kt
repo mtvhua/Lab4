@@ -17,7 +17,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,9 +50,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.graphics.vector.ImageVector
 import coil3.compose.AsyncImage
 import com.curso.android.module3.amiibo.R
 import com.curso.android.module3.amiibo.data.local.entity.AmiiboEntity
+import com.curso.android.module3.amiibo.domain.error.ErrorType
 import com.curso.android.module3.amiibo.ui.viewmodel.AmiiboUiState
 import com.curso.android.module3.amiibo.ui.viewmodel.AmiiboViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -190,13 +196,27 @@ fun AmiiboListScreen(
                 }
             }
 
-            // Estado de error
+            /**
+             * Estado de error con tipo específico.
+             *
+             * CONCEPTO: Errores Tipados en UI
+             * -------------------------------
+             * El estado de error ahora incluye:
+             * - errorType: Para mostrar iconos apropiados
+             * - isRetryable: Para decidir si mostrar botón de reintentar
+             *
+             * Esto mejora la UX porque:
+             * - El usuario ve un icono que representa el problema
+             * - Solo ve "Reintentar" cuando tiene sentido
+             */
             is AmiiboUiState.Error -> {
                 if (state.cachedAmiibos.isNotEmpty()) {
                     // Hay datos en cache: mostrar datos + mensaje de error
                     Column(modifier = Modifier.padding(paddingValues)) {
                         ErrorBanner(
                             message = state.message,
+                            errorType = state.errorType,
+                            isRetryable = state.isRetryable,
                             onRetry = { viewModel.refreshAmiibos() }
                         )
                         AmiiboGrid(
@@ -209,6 +229,8 @@ fun AmiiboListScreen(
                     // Sin cache: pantalla de error completa
                     ErrorContent(
                         message = state.message,
+                        errorType = state.errorType,
+                        isRetryable = state.isRetryable,
                         onRetry = { viewModel.refreshAmiibos() },
                         modifier = Modifier.padding(paddingValues)
                     )
@@ -256,12 +278,21 @@ private fun LoadingContent(modifier: Modifier = Modifier) {
 /**
  * Contenido mostrado cuando hay error y no hay cache.
  *
+ * CONCEPTO: Iconos por Tipo de Error
+ * ----------------------------------
+ * Cada tipo de error muestra un icono diferente para comunicar
+ * visualmente la naturaleza del problema al usuario.
+ *
  * @param message Mensaje de error
+ * @param errorType Tipo de error para mostrar icono apropiado
+ * @param isRetryable Si true, muestra botón de reintentar
  * @param onRetry Callback para reintentar
  */
 @Composable
 private fun ErrorContent(
     message: String,
+    errorType: ErrorType,
+    isRetryable: Boolean,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -274,6 +305,14 @@ private fun ErrorContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(32.dp)
         ) {
+            // Icono según el tipo de error
+            Icon(
+                imageVector = errorType.toIcon(),
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+
             Text(
                 text = stringResource(R.string.error_loading),
                 style = MaterialTheme.typography.titleMedium,
@@ -285,21 +324,46 @@ private fun ErrorContent(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Button(onClick = onRetry) {
-                Text(text = stringResource(R.string.retry))
+
+            // Solo mostrar botón si el error es recuperable
+            if (isRetryable) {
+                Button(onClick = onRetry) {
+                    Text(text = stringResource(R.string.retry))
+                }
             }
         }
     }
 }
 
 /**
+ * Función de extensión para obtener el icono según el tipo de error.
+ *
+ * CONCEPTO: Extension Functions
+ * ----------------------------
+ * Las funciones de extensión permiten agregar métodos a clases
+ * existentes sin modificarlas. Aquí agregamos toIcon() a ErrorType.
+ */
+private fun ErrorType.toIcon(): ImageVector = when (this) {
+    ErrorType.NETWORK -> Icons.Default.CloudOff   // Sin conexión
+    ErrorType.PARSE -> Icons.Default.Warning      // Error de datos
+    ErrorType.DATABASE -> Icons.Default.Storage   // Error de BD
+    ErrorType.UNKNOWN -> Icons.Default.Error      // Error genérico
+}
+
+/**
  * Banner de error mostrado sobre contenido existente.
  *
  * Útil cuando hay error pero tenemos datos en cache.
+ * Muestra un icono pequeño según el tipo de error.
+ *
+ * @param errorType Tipo de error para mostrar icono apropiado
+ * @param isRetryable Si true, muestra botón de reintentar
  */
 @Composable
 private fun ErrorBanner(
     message: String,
+    errorType: ErrorType,
+    isRetryable: Boolean,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -315,16 +379,29 @@ private fun ErrorBanner(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Icono pequeño según el tipo de error
+            Icon(
+                imageVector = errorType.toIcon(),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onErrorContainer
+            )
+
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onErrorContainer
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.padding(top = 4.dp)
             )
-            Button(
-                onClick = onRetry,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text(text = stringResource(R.string.retry))
+
+            // Solo mostrar botón si el error es recuperable
+            if (isRetryable) {
+                Button(
+                    onClick = onRetry,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text(text = stringResource(R.string.retry))
+                }
             }
         }
     }

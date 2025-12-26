@@ -1,5 +1,6 @@
 package com.curso.android.module3.amiibo.repository
 
+import android.database.sqlite.SQLiteException
 import com.curso.android.module3.amiibo.data.local.dao.AmiiboDao
 import com.curso.android.module3.amiibo.data.local.entity.AmiiboEntity
 import com.curso.android.module3.amiibo.data.remote.api.AmiiboApiService
@@ -9,7 +10,10 @@ import com.curso.android.module3.amiibo.data.remote.model.toDetail
 import com.curso.android.module3.amiibo.data.remote.model.toDomainModel
 import com.curso.android.module3.amiibo.data.remote.model.toEntities
 import com.curso.android.module3.amiibo.data.remote.model.toEntity
+import com.curso.android.module3.amiibo.domain.error.AmiiboError
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.SerializationException
+import java.io.IOException
 
 /**
  * ============================================================================
@@ -88,35 +92,64 @@ class AmiiboRepository(
      * 3. Reemplaza todos los datos en Room (transacción atómica)
      * 4. Room notifica automáticamente al Flow observeAmiibos()
      *
-     * MANEJO DE ERRORES:
-     * - Si la API falla, lanza la excepción
-     * - El ViewModel debe manejar esto con try/catch
-     * - Los datos en cache permanecen intactos si hay error
+     * MANEJO DE ERRORES TIPADOS:
+     * -------------------------
+     * En lugar de propagar excepciones genéricas, este método lanza
+     * errores específicos usando la sealed class AmiiboError.
+     *
+     * Esto permite al ViewModel/UI:
+     * - Mostrar mensajes específicos por tipo de error
+     * - Decidir si reintentar (Network) o no (Parse)
+     * - Reportar a analytics según el tipo
      *
      * suspend: Función suspendible (ejecutar en Coroutine)
      *
-     * @throws IOException si hay error de red
-     * @throws HttpException si el servidor retorna error
-     * @throws Exception si hay error de parsing o DB
+     * @throws AmiiboError.Network si hay error de conexión
+     * @throws AmiiboError.Parse si el JSON no se puede parsear
+     * @throws AmiiboError.Database si Room falla al guardar
+     * @throws AmiiboError.Unknown para errores no categorizados
      */
     suspend fun refreshAmiibos() {
-        // 1. Obtener datos de la API
-        // Retrofit ejecuta esto en un hilo de background automáticamente
-        val response = amiiboApiService.getAllAmiibos()
+        try {
+            // 1. Obtener datos de la API
+            // Retrofit ejecuta esto en un hilo de background automáticamente
+            val response = amiiboApiService.getAllAmiibos()
 
-        // 2. Convertir DTOs a Entities (limitado a 20 resultados)
-        // Usamos la función de extensión toEntities() definida en AmiiboDto.kt
-        val entities = response.amiibo.take(MAX_AMIIBOS).toEntities()
+            // 2. Convertir DTOs a Entities (limitado a 20 resultados)
+            // Usamos la función de extensión toEntities() definida en AmiiboDto.kt
+            val entities = response.amiibo.take(MAX_AMIIBOS).toEntities()
 
-        // 3. Guardar en la base de datos (reemplaza todo)
-        // replaceAll() es una @Transaction que:
-        //   a) Elimina todos los registros existentes
-        //   b) Inserta los nuevos registros
-        // Si algo falla, se hace rollback automático
-        amiiboDao.replaceAll(entities)
+            // 3. Guardar en la base de datos (reemplaza todo)
+            // replaceAll() es una @Transaction que:
+            //   a) Elimina todos los registros existentes
+            //   b) Inserta los nuevos registros
+            // Si algo falla, se hace rollback automático
+            try {
+                amiiboDao.replaceAll(entities)
+            } catch (e: SQLiteException) {
+                // Error de base de datos (disco lleno, corrupción, etc.)
+                throw AmiiboError.Database(cause = e)
+            }
 
-        // 4. NO necesitamos retornar nada
-        // Room notifica automáticamente al Flow de observeAmiibos()
+            // 4. NO necesitamos retornar nada
+            // Room notifica automáticamente al Flow de observeAmiibos()
+
+        } catch (e: AmiiboError) {
+            // Re-lanzar errores ya tipados (ej: Database del catch interno)
+            throw e
+        } catch (e: IOException) {
+            // Error de red: sin conexión, timeout, DNS, etc.
+            // IOException es la clase base para errores de I/O en Java
+            throw AmiiboError.Network(cause = e)
+        } catch (e: SerializationException) {
+            // Error de parsing: JSON malformado o campos faltantes
+            // kotlinx.serialization lanza esto cuando falla el parsing
+            throw AmiiboError.Parse(cause = e)
+        } catch (e: Exception) {
+            // Catch-all para errores inesperados
+            // Siempre incluir el error original como causa para debugging
+            throw AmiiboError.Unknown(cause = e)
+        }
     }
 
     companion object {
@@ -138,24 +171,50 @@ class AmiiboRepository(
      *
      * @param name Nombre del Amiibo a consultar
      * @return AmiiboDetail con toda la información del Amiibo
-     * @throws Exception si hay error de red o el Amiibo no existe
+     * @throws AmiiboError si hay error de red, parsing, base de datos o desconocido
      */
     suspend fun getAmiiboDetail(name: String): AmiiboDetail {
-        // 1. Buscar en cache local
-        val cachedDetail = amiiboDao.getDetailByName(name)
-        if (cachedDetail != null) {
-            // Retornar desde cache
-            return cachedDetail.toDomainModel()
+        try {
+            // 1. Buscar en cache local
+            val cachedDetail = try {
+                amiiboDao.getDetailByName(name)
+            } catch (e: SQLiteException) {
+                throw AmiiboError.Database(cause = e)
+            }
+
+            if (cachedDetail != null) {
+                // Retornar desde cache
+                return cachedDetail.toDomainModel()
+            }
+
+            // 2. No está en cache, obtener de la API
+            val response = amiiboApiService.getAmiiboDetail(name)
+            val detail = response.amiibo.first().toDetail()
+
+            // 3. Guardar en cache para futuras consultas
+            try {
+                amiiboDao.insertDetail(detail.toEntity())
+            } catch (e: SQLiteException) {
+                throw AmiiboError.Database(cause = e)
+            }
+
+            return detail
+
+        } catch (e: AmiiboError) {
+            throw e
+        } catch (e: IOException) {
+            throw AmiiboError.Network(cause = e)
+        } catch (e: SerializationException) {
+            throw AmiiboError.Parse(cause = e)
+        } catch (e: NoSuchElementException) {
+            // first() lanza esto si la lista está vacía (Amiibo no encontrado)
+            throw AmiiboError.Parse(
+                message = "No se encontró el Amiibo '$name'",
+                cause = e
+            )
+        } catch (e: Exception) {
+            throw AmiiboError.Unknown(cause = e)
         }
-
-        // 2. No está en cache, obtener de la API
-        val response = amiiboApiService.getAmiiboDetail(name)
-        val detail = response.amiibo.first().toDetail()
-
-        // 3. Guardar en cache para futuras consultas
-        amiiboDao.insertDetail(detail.toEntity())
-
-        return detail
     }
 
     /**

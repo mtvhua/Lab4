@@ -14,13 +14,25 @@ style: |
 ---
 
 <!-- _class: lead -->
-<!-- _class: lead -->
 # Module 3: Architecture & Persistence
 ## MVVM, Room, Retrofit & Coil
+### Adrián Catalán
+### adriancatalan@galileo.edu
 
 ---
 
-# Amiibo Vault App
+# Agenda
+
+1. **Module App**
+2. **MVVM & Advanced Architecture**
+3. **Room Database**
+4. **Networking**
+5. **Deep Dive (Internals)**
+6. **Challenge Lab**
+
+---
+
+## Amiibo Vault App
 
 This application demonstrates an **Offline-First** architecture. It fetches Amiibo data, stores it locally, and displays it even without an internet connection.
 
@@ -30,18 +42,8 @@ This application demonstrates an **Offline-First** architecture. It fetches Amii
 
 ---
 
-# Module Agenda
-
-1. **MVVM & Advanced Architecture**
-2. **Room Database**
-3. **Networking**
-4. **Deep Dive (Internals)**
-5. **Challenge Lab**
-
----
-
 <!-- _class: lead -->
-# 1. Advanced Architecture
+# 2. Advanced Architecture
 ## Unidirectional Data Flow (UDF) & State
 
 ---
@@ -240,7 +242,7 @@ Where do we catch exceptions?
 ---
 
 <!-- _class: lead -->
-# 2. Room Database
+# 3. Room Database
 ## Persistence & Offline-First
 
 ---
@@ -418,7 +420,7 @@ fun writeUserAndReadInList() = runTest {
 ---
 
 <!-- _class: lead -->
-# 3. Networking
+# 4. Networking
 ## Retrofit, OkHttp & Coil
 
 ---
@@ -546,7 +548,7 @@ fun AmiiboDto.toDomain(): Amiibo {
 ---
 
 <!-- _class: lead -->
-# 4. Deep Dive
+# 5. Deep Dive
 ## Architecture, Room & Network Internals
 
 ---
@@ -601,74 +603,119 @@ This can reduce payload size by 70-90%.
 
 ---
 
+## ViewModel Lifecycle & SavedStateHandle
+
+**How long does a ViewModel live?**
+*   Survives configuration changes (rotation).
+*   Destroyed when the Activity/Fragment is **finished** (not just stopped).
+
+**SavedStateHandle:**
+For data that must survive **process death** (system kills app in background).
+
+```kotlin
+class AmiiboViewModel(
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
+    // Survives process death
+    var searchQuery: String
+        get() = savedStateHandle["query"] ?: ""
+        set(value) { savedStateHandle["query"] = value }
+}
+```
+
+---
+
+## Repository Pattern Best Practices
+
+**Single Responsibility:**
+*   Repository should only coordinate data sources.
+*   Don't put business logic here (use Use Cases/Interactors for that).
+
+**Error Mapping:**
+```kotlin
+// Map network errors to domain errors
+suspend fun getAmiibos(): Result<List<Amiibo>> {
+    return try {
+        Result.success(api.getAmiibos().toDomain())
+    } catch (e: IOException) {
+        Result.failure(NetworkError("No connection"))
+    } catch (e: HttpException) {
+        Result.failure(ServerError(e.code()))
+    }
+}
+```
+
+---
+
 <!-- _class: lead -->
-# 5. Challenge Lab
+# 6. Challenge Lab
 ## Practice & Application
 
 ---
 
-## Intro: The "Amiibo Vault" App
+## Part 1: Graceful Offline Mode
 
-We have a skeleton app that:
-1.  Fetches Amiibos from API.
-2.  Stores them in Room.
-3.  Displays them in a Grid.
+**Context:**
+Currently, when the API fails, the app shows a full-screen error even if cached data exists in Room. This is poor UX for an offline-first app.
 
-**The functionality is basic.** We need to make it robust and feature-rich.
+**Your Task:**
+Implement graceful error handling that:
+- Shows cached data when available, even during errors
+- Displays a non-blocking Snackbar for network errors
+- Only shows full-screen error when NO cached data exists
+- Allows retry without losing current view
 
----
-
-## Challenge: Refactor Error Handling
-
-**Goal:** Provide a seamless Offline Experience.
-
-**Current Behavior:** 
-- If API fails, `refreshAmiibos` catches exception and sets `UiState.Error`.
-- UI shows a red Error Screen.
-- **Problem:** If I have data in Room, I shouldn't see an Error Screen!
-
-**Task:**
-1.  Modify `UiState.Error` to accept `data: List<Amiibo>?`.
-2.  In ViewModel, emit `Error` but pass the current `_uiState.value.data`.
-3.  In UI, if state is Error but has data -> Show a `Snackbar` ("Offline Mode") but keep the Grid visible.
+**Files to Modify:**
+- `ui/viewmodel/AmiiboViewModel.kt`
+- `ui/screens/AmiiboListScreen.kt`
 
 ---
 
-## Challenge: Search Feature (New)
+## Part 1: Definition of Done
 
-**Goal:** Allow users to filter Amiibos locally without hitting the API.
-
-**Steps:**
-
-1.  **DAO Update:**
-    - Add a new query method that filters by name.
-    - `@Query("SELECT * FROM amiibos WHERE name LIKE '%' || :query || '%'")`
-    - `fun searchAmiibos(query: String): Flow<List<AmiiboEntity>>`
-
-2.  **ViewModel Update:**
-    - Add a `MutableStateFlow<String>` for the search query.
-    - Use `flatMapLatest` (advanced) or `combine` to switch between the full list flow and the search flow based on user input.
+| Criteria | Description |
+|----------|-------------|
+| UiState updated | `Error` state accepts optional `data: List<Amiibo>?` |
+| Cached data preserved | Error state carries existing data from previous state |
+| Snackbar shown | Network error shows Snackbar, not full-screen error |
+| Grid still visible | User sees cached Amiibos while Snackbar is displayed |
+| Full error only when empty | Full-screen error only if `data` is null/empty |
+| Retry available | Snackbar has "Retry" action button |
+| Dismiss works | Snackbar can be dismissed without affecting grid |
 
 ---
 
-## Search Logic (ViewModel)
+## Part 2: Local Search
 
-```kotlin
-private val _searchQuery = MutableStateFlow("")
-val searchQuery = _searchQuery.asStateFlow()
+**Context:**
+Users want to filter the Amiibo collection by name without making network requests. This requires reactive Flow switching.
 
-@OptIn(ExperimentalCoroutinesApi::class)
-val uiState = _searchQuery
-    .flatMapLatest { query ->
-        if (query.isBlank()) {
-            repository.getAll()
-        } else {
-            repository.search(query)
-        }
-    }
-    .map { AmiiboUiState.Success(it) }
-    .stateIn(viewModelScope, ...)
-```
+**Your Task:**
+Implement local search that:
+- Adds a search TextField at the top of the screen
+- Filters Amiibos in real-time as user types
+- Uses Room query (not in-memory filtering)
+- Switches between full list and filtered list reactively
+
+**Files to Modify:**
+- `data/dao/AmiiboDao.kt`
+- `repository/AmiiboRepository.kt`
+- `ui/viewmodel/AmiiboViewModel.kt`
+- `ui/screens/AmiiboListScreen.kt`
+
+---
+
+## Part 2: Definition of Done
+
+| Criteria | Description |
+|----------|-------------|
+| DAO method exists | `searchAmiibos(query: String): Flow<List<AmiiboEntity>>` |
+| LIKE query works | SQL uses `WHERE name LIKE '%' || :query || '%'` |
+| Search TextField | `OutlinedTextField` at top of screen |
+| Real-time filtering | Results update as user types (debounce optional) |
+| Flow switching | Uses `flatMapLatest` to switch between flows |
+| Empty query = all | Blank search shows full list |
+| Clear button | X icon to clear search text |
 
 ---
 
@@ -679,8 +726,37 @@ val uiState = _searchQuery
 
 ## Resources
 
-- [Android Architecture Guide](https://developer.android.com/topic/architecture)
-- [Room Training](https://developer.android.com/training/data-storage/room)
-- [Coroutines & Flow Best Practices](https://medium.com/androiddevelopers)
-- [Koin Documentation](https://insert-koin.io/)
-- [Amiibo API](https://www.amiiboapi.com/)
+**Architecture & State**
+*   [Android Architecture Guide](https://developer.android.com/topic/architecture)
+*   [StateFlow and SharedFlow](https://developer.android.com/kotlin/flow/stateflow-and-sharedflow)
+*   [Sealed Classes in Kotlin](https://kotlinlang.org/docs/sealed-classes.html)
+*   [UI State in Compose](https://developer.android.com/develop/ui/compose/state)
+*   [Codelab: State in Jetpack Compose](https://developer.android.com/codelabs/jetpack-compose-state)
+
+**Room Database**
+*   [Room Training](https://developer.android.com/training/data-storage/room)
+*   [Room with Kotlin Flows](https://developer.android.com/topic/libraries/architecture/room)
+*   [Room Migrations Guide](https://developer.android.com/training/data-storage/room/migrating-db-versions)
+*   [KSP Overview](https://developer.android.com/build/migrate-to-ksp)
+*   [Codelab: Room with a View](https://developer.android.com/codelabs/android-room-with-a-view-kotlin)
+
+**Networking & Images**
+*   [Retrofit Documentation](https://square.github.io/retrofit/)
+*   [OkHttp Interceptors](https://square.github.io/okhttp/features/interceptors/)
+*   [Kotlinx Serialization](https://kotlinlang.org/docs/serialization.html)
+*   [Coil for Compose](https://coil-kt.github.io/coil/compose/)
+*   [Amiibo API](https://www.amiiboapi.com/)
+
+---
+
+## Recommended Articles
+
+**Room Database**
+*   [7 Pro-Tips for Room](https://medium.com/androiddevelopers/7-pro-tips-for-room-fbadea4bfbd1) - Android Developers
+*   [Room Flow: Reactive Queries](https://medium.com/androiddevelopers/room-flow-273acffe5b57) - Android Developers
+*   [Database Relations in Room](https://proandroiddev.com/android-room-handling-relations-using-livedata-2d892e40bd53) - ProAndroidDev
+
+**Offline-First Architecture**
+*   [Build an Offline-First App](https://proandroiddev.com/build-an-offline-first-app-with-room-and-coroutines-e1f8a65e0a71) - ProAndroidDev
+*   [Caching Strategies for Android](https://medium.com/androiddevelopers/caching-strategies-f7b2f6c3e4b8) - Android Developers
+*   [The Repository Pattern Explained](https://proandroiddev.com/the-repository-pattern-in-android-30bc1d80c13d) - ProAndroidDev

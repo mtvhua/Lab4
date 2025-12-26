@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.curso.android.module2.stream.data.model.Song
 import com.curso.android.module2.stream.ui.components.SongCoverMock
+import com.curso.android.module2.stream.ui.viewmodel.SearchUiState
 import com.curso.android.module2.stream.ui.viewmodel.SearchViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -112,26 +113,138 @@ fun SearchScreen(
      * --------------------
      * Igual que en HomeScreen, observamos el StateFlow del ViewModel.
      * Cada vez que el usuario escribe, el estado cambia y la UI se recompone.
+     *
+     * MANEJO DE SEALED INTERFACE
+     * --------------------------
+     * Ahora usamos when para manejar los diferentes estados:
+     * - Loading: Muestra indicador de carga
+     * - Success: Muestra la UI de búsqueda
+     * - Error: Muestra mensaje de error con opción de reintentar
      */
     val uiState by viewModel.uiState.collectAsState()
+
+    /**
+     * Extraemos query del estado Success para el TopBar.
+     * Si no estamos en Success, mostramos string vacío.
+     */
+    val currentQuery = (uiState as? SearchUiState.Success)?.query ?: ""
 
     Scaffold(
         topBar = {
             SearchTopBar(
-                query = uiState.query,
+                query = currentQuery,
                 onQueryChange = { viewModel.updateQuery(it) },
                 onClearClick = { viewModel.clearSearch() },
                 onBackClick = onBackClick
             )
         }
     ) { paddingValues ->
-        SearchContent(
-            songs = uiState.displayedSongs,
-            isSearching = uiState.isSearching,
-            query = uiState.query,
-            onSongClick = onSongClick,
-            modifier = Modifier.padding(paddingValues)
-        )
+        /**
+         * WHEN EXHAUSTIVO
+         * ---------------
+         * Con sealed interface, el compilador verifica que manejemos
+         * todos los estados posibles. Si agregamos un nuevo estado,
+         * el compilador nos alertará.
+         */
+        when (val state = uiState) {
+            is SearchUiState.Loading -> {
+                LoadingState(modifier = Modifier.padding(paddingValues))
+            }
+
+            is SearchUiState.Success -> {
+                SearchContent(
+                    songs = state.displayedSongs,
+                    isSearching = state.isSearching,
+                    query = state.query,
+                    onSongClick = onSongClick,
+                    modifier = Modifier.padding(paddingValues)
+                )
+            }
+
+            is SearchUiState.Error -> {
+                ErrorState(
+                    message = state.message,
+                    onRetry = { viewModel.retry() },
+                    modifier = Modifier.padding(paddingValues)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Estado de carga.
+ *
+ * @param modifier Modificadores
+ */
+@Composable
+private fun LoadingState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            androidx.compose.material3.CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Cargando canciones...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
+ * Estado de error con opción de reintentar.
+ *
+ * @param message Mensaje de error
+ * @param onRetry Callback para reintentar
+ * @param modifier Modificadores
+ *
+ * PATRÓN ERROR STATE:
+ * ------------------
+ * Siempre ofrece una acción al usuario cuando hay error.
+ * "Reintentar" es la acción más común y esperada.
+ */
+@Composable
+private fun ErrorState(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.Clear,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Ocurrió un error",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            androidx.compose.material3.Button(onClick = onRetry) {
+                Text("Reintentar")
+            }
+        }
     }
 }
 

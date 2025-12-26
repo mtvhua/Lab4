@@ -169,6 +169,23 @@ dependencies {
     implementation(libs.coil.compose)
 
     // =========================================================================
+    // DEPENDENCY INJECTION (Koin)
+    // =========================================================================
+    // Koin es un framework de DI ligero basado en DSL de Kotlin.
+    //
+    // ¿POR QUÉ KOIN EN LUGAR DE HILT?
+    // - Koin: DSL de Kotlin puro, sin generación de código, setup rápido
+    // - Hilt: Basado en Dagger, generación de código, más robusto para proyectos grandes
+    //
+    // Para proyectos educativos/medianos, Koin es más accesible.
+    // Para producción enterprise, considera Hilt.
+    //
+    // BOM para sincronizar versiones
+    implementation(platform(libs.koin.bom))
+    // Bundle incluye koin-android y koin-compose
+    implementation(libs.bundles.koin)
+
+    // =========================================================================
     // TESTING
     // =========================================================================
     testImplementation(libs.junit)

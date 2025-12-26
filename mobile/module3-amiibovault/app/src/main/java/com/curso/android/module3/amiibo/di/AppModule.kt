@@ -105,9 +105,21 @@ val appModule = module {
      * - Útil para debugging
      * - En producción, usar Level.NONE o Level.BASIC
      *
-     * Timeouts:
-     * - Evitan que la app se quede colgada esperando
-     * - 30 segundos es un valor razonable para APIs públicas
+     * TIMEOUTS
+     * --------
+     * Los timeouts evitan que la app se quede colgada esperando una respuesta.
+     *
+     * - connectTimeout: Tiempo máximo para establecer conexión TCP
+     * - readTimeout: Tiempo máximo para recibir datos una vez conectado
+     * - writeTimeout: Tiempo máximo para enviar datos (body del request)
+     *
+     * ¿POR QUÉ 15 SEGUNDOS?
+     * - Mejora la UX: El usuario no espera demasiado para ver un error
+     * - Balance: Suficiente para conexiones lentas, no demasiado largo
+     * - Móviles: Las conexiones móviles son más rápidas que antes
+     * - API Amiibo: Es una API rápida, 15s es más que suficiente
+     *
+     * En APIs muy lentas (ej: generación de IA), considera 30-60 segundos.
      */
     single {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -118,9 +130,9 @@ val appModule = module {
 
         OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)  // Tiempo para establecer conexión
-            .readTimeout(30, TimeUnit.SECONDS)     // Tiempo para leer respuesta
-            .writeTimeout(30, TimeUnit.SECONDS)    // Tiempo para enviar request
+            .connectTimeout(15, TimeUnit.SECONDS)  // Tiempo para establecer conexión
+            .readTimeout(15, TimeUnit.SECONDS)     // Tiempo para leer respuesta
+            .writeTimeout(15, TimeUnit.SECONDS)    // Tiempo para enviar request
             .build()
     }
 
@@ -175,10 +187,46 @@ val appModule = module {
      * - AmiiboDatabase::class.java: Clase de la base de datos
      * - DATABASE_NAME: Nombre del archivo SQLite
      *
-     * fallbackToDestructiveMigration():
-     * - Si la versión de DB cambia y no hay migración, BORRA TODO
-     * - Útil durante desarrollo
-     * - En producción, usar migraciones apropiadas
+     * =========================================================================
+     * FALLBACK TO DESTRUCTIVE MIGRATION
+     * =========================================================================
+     *
+     * ⚠️ SOLO PARA DESARROLLO - NO USAR EN PRODUCCIÓN
+     *
+     * fallbackToDestructiveMigration(dropAllTables = true):
+     * - Si la versión de DB cambia y no hay migración definida, BORRA TODO
+     * - Los datos del usuario se PIERDEN al actualizar la app
+     * - Útil durante desarrollo para iterar rápidamente
+     *
+     * ¿QUÉ PASA EN PRODUCCIÓN?
+     * ------------------------
+     * En producción, cuando cambias el schema de la BD, debes:
+     *
+     * 1. MIGRACIÓN MANUAL (recomendado):
+     *    ```kotlin
+     *    val MIGRATION_1_2 = object : Migration(1, 2) {
+     *        override fun migrate(db: SupportSQLiteDatabase) {
+     *            db.execSQL("ALTER TABLE amiibos ADD COLUMN favorite INTEGER DEFAULT 0")
+     *        }
+     *    }
+     *
+     *    Room.databaseBuilder(...)
+     *        .addMigrations(MIGRATION_1_2)
+     *        .build()
+     *    ```
+     *
+     * 2. AUTO-MIGRATION (Room 2.4+):
+     *    ```kotlin
+     *    @Database(
+     *        version = 2,
+     *        autoMigrations = [
+     *            AutoMigration(from = 1, to = 2)
+     *        ]
+     *    )
+     *    ```
+     *
+     * VER MÁS: https://developer.android.com/training/data-storage/room/migrating-db-versions
+     * =========================================================================
      */
     single {
         Room.databaseBuilder(
@@ -186,7 +234,8 @@ val appModule = module {
             AmiiboDatabase::class.java,
             AmiiboDatabase.DATABASE_NAME
         )
-            .fallbackToDestructiveMigration(dropAllTables = true)  // Solo para desarrollo
+            // ⚠️ SOLO DESARROLLO: En producción usar addMigrations()
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
 

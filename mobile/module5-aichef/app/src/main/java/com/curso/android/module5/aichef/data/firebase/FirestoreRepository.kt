@@ -56,7 +56,7 @@ import kotlinx.coroutines.tasks.await
  *
  * =============================================================================
  */
-class FirestoreRepository {
+class FirestoreRepository @javax.inject.Inject constructor() : IFirestoreRepository {
 
     // Instancia de Firestore
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -80,7 +80,7 @@ class FirestoreRepository {
      * @param userId ID del usuario autenticado
      * @return Flow que emite la lista actualizada de recetas
      */
-    fun observeUserRecipes(userId: String): Flow<List<Recipe>> = callbackFlow {
+    override fun observeUserRecipes(userId: String): Flow<List<Recipe>> = callbackFlow {
         // Crear query para obtener solo las recetas del usuario
         // Ordenadas por fecha de creación (más recientes primero)
         val query = recipesCollection
@@ -128,7 +128,7 @@ class FirestoreRepository {
      * @param recipe Receta a guardar (sin ID)
      * @return Result con el ID del documento creado o un error
      */
-    suspend fun saveRecipe(recipe: Recipe): Result<String> {
+    override suspend fun saveRecipe(recipe: Recipe): Result<String> {
         return try {
             // add() retorna una referencia al documento creado
             val documentRef = recipesCollection.add(recipe.toMap()).await()
@@ -144,7 +144,7 @@ class FirestoreRepository {
      * @param recipeId ID del documento
      * @return Recipe o null si no existe
      */
-    suspend fun getRecipe(recipeId: String): Recipe? {
+    override suspend fun getRecipe(recipeId: String): Recipe? {
         return try {
             val document = recipesCollection.document(recipeId).get().await()
             if (document.exists()) {
@@ -164,7 +164,7 @@ class FirestoreRepository {
      * @param recipeId ID del documento a eliminar
      * @return Result indicando éxito o error
      */
-    suspend fun deleteRecipe(recipeId: String): Result<Unit> {
+    override suspend fun deleteRecipe(recipeId: String): Result<Unit> {
         return try {
             recipesCollection.document(recipeId).delete().await()
             Result.success(Unit)
@@ -184,7 +184,7 @@ class FirestoreRepository {
      * @param imageUrl URL de la imagen en Firebase Storage
      * @return Result indicando éxito o error
      */
-    suspend fun updateGeneratedImageUrl(recipeId: String, imageUrl: String): Result<Unit> {
+    override suspend fun updateGeneratedImageUrl(recipeId: String, imageUrl: String): Result<Unit> {
         return try {
             recipesCollection.document(recipeId)
                 .update("generatedImageUrl", imageUrl)

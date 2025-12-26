@@ -2,7 +2,7 @@ package com.curso.android.module2.stream.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.curso.android.module2.stream.data.model.Song
-import com.curso.android.module2.stream.data.repository.MockMusicRepository
+import com.curso.android.module2.stream.data.repository.MusicRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,38 +50,61 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * Estado de la pantalla de búsqueda.
  *
- * A diferencia de HomeUiState (sealed interface con Loading/Success/Error),
- * aquí usamos una data class simple porque:
- * - No hay carga asíncrona (filtrado es instantáneo)
- * - Siempre tenemos un estado válido (query vacío = sin resultados)
+ * CONSISTENCIA CON HOMEVIEWMODEL
+ * ------------------------------
+ * Usamos sealed interface (igual que HomeUiState) para mantener
+ * consistencia arquitectónica en toda la aplicación.
+ *
+ * Aunque el filtrado local es "instantáneo", usar sealed interface:
+ * 1. Prepara el código para búsquedas remotas futuras
+ * 2. Maneja errores potenciales (corrupted data, excepciones)
+ * 3. Mantiene el mismo patrón en todos los ViewModels
  *
  * CUÁNDO USAR CADA ENFOQUE:
- * - Sealed interface: Cuando hay estados mutuamente excluyentes (Loading vs Success)
- * - Data class: Cuando el estado es una combinación de valores que coexisten
+ * - Sealed interface: Estados mutuamente excluyentes (Loading vs Success vs Error)
+ * - Data class: Valores que coexisten (query + results juntos)
  *
- * @property query Texto actual de búsqueda
- * @property results Lista de canciones que coinciden con la búsqueda
- * @property allSongs Todas las canciones disponibles (para mostrar inicialmente)
+ * Aquí combinamos: Sealed interface con data classes internas para lo mejor de ambos.
  */
-data class SearchUiState(
-    val query: String = "",
-    val results: List<Song> = emptyList(),
-    val allSongs: List<Song> = emptyList()
-) {
+sealed interface SearchUiState {
     /**
-     * Propiedad computada: ¿Está el usuario buscando activamente?
-     *
-     * Las propiedades computadas son útiles para derivar información
-     * del estado sin duplicar datos.
+     * Estado inicial mientras se cargan las canciones.
      */
-    val isSearching: Boolean
-        get() = query.isNotBlank()
+    data object Loading : SearchUiState
 
     /**
-     * Canciones a mostrar: resultados si está buscando, todas si no.
+     * Canciones cargadas y listas para búsqueda.
+     *
+     * @property query Texto actual de búsqueda
+     * @property results Lista de canciones que coinciden con la búsqueda
+     * @property allSongs Todas las canciones disponibles
      */
-    val displayedSongs: List<Song>
-        get() = if (isSearching) results else allSongs
+    data class Success(
+        val query: String = "",
+        val results: List<Song> = emptyList(),
+        val allSongs: List<Song> = emptyList()
+    ) : SearchUiState {
+        /**
+         * Propiedad computada: ¿Está el usuario buscando activamente?
+         */
+        val isSearching: Boolean
+            get() = query.isNotBlank()
+
+        /**
+         * Canciones a mostrar: resultados si está buscando, todas si no.
+         */
+        val displayedSongs: List<Song>
+            get() = if (isSearching) results else allSongs
+    }
+
+    /**
+     * Error al cargar o buscar canciones.
+     *
+     * @property message Mensaje descriptivo del error
+     */
+    data class Error(
+        val message: String
+    ) : SearchUiState
 }
 
 /**
@@ -89,35 +112,66 @@ data class SearchUiState(
  *
  * @param repository Repositorio de música (inyectado por Koin)
  *
- * INYECCIÓN DE DEPENDENCIAS:
- * --------------------------
- * Igual que HomeViewModel, recibe el repositorio como parámetro.
+ * INYECCIÓN DE DEPENDENCIAS CON INTERFACE:
+ * ----------------------------------------
+ * Igual que HomeViewModel, recibe el repositorio como parámetro,
+ * pero ahora depende de la INTERFACE MusicRepository.
+ *
  * Koin resuelve automáticamente esta dependencia porque ya está
- * registrado como singleton en AppModule.
+ * registrado con bind en AppModule.
  *
  * Esto demuestra que MÚLTIPLES ViewModels pueden compartir
  * el MISMO repositorio sin crear instancias duplicadas.
  */
 class SearchViewModel(
-    private val repository: MockMusicRepository
+    private val repository: MusicRepository
 ) : ViewModel() {
 
     /**
      * Estado interno mutable.
      *
-     * Inicializamos con todas las canciones para mostrarlas
-     * antes de que el usuario empiece a buscar.
+     * INICIALIZACIÓN CON LOADING
+     * --------------------------
+     * Igual que HomeViewModel, iniciamos en Loading y luego
+     * cargamos las canciones. Esto mantiene consistencia.
      */
-    private val _uiState = MutableStateFlow(
-        SearchUiState(
-            allSongs = repository.getAllSongs()
-        )
-    )
+    private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Loading)
 
     /**
      * Estado expuesto a la UI (inmutable).
      */
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
+
+    /**
+     * Inicialización del ViewModel.
+     *
+     * Cargamos las canciones al iniciar, manejando posibles errores.
+     */
+    init {
+        loadSongs()
+    }
+
+    /**
+     * Carga todas las canciones desde el repositorio.
+     *
+     * MANEJO DE ERRORES
+     * -----------------
+     * Aunque con datos mock es improbable que falle, envolvemos
+     * en try-catch para:
+     * 1. Demostrar el patrón correcto
+     * 2. Estar preparados para implementaciones reales
+     * 3. Manejar casos edge (datos corruptos, etc.)
+     */
+    private fun loadSongs() {
+        try {
+            val allSongs = repository.getAllSongs()
+            _uiState.value = SearchUiState.Success(allSongs = allSongs)
+        } catch (e: Exception) {
+            _uiState.value = SearchUiState.Error(
+                message = e.message ?: "Error al cargar canciones"
+            )
+        }
+    }
 
     /**
      * Actualiza la consulta de búsqueda.
@@ -140,34 +194,42 @@ class SearchViewModel(
      * ```kotlin
      * // En la UI:
      * TextField(
-     *     value = uiState.query,
+     *     value = (uiState as? SearchUiState.Success)?.query ?: "",
      *     onValueChange = { viewModel.updateQuery(it) }
      * )
      * ```
      */
     fun updateQuery(query: String) {
-        val results = if (query.isBlank()) {
-            emptyList()
-        } else {
-            searchSongs(query)
-        }
+        // Solo actualizamos si estamos en estado Success
+        val currentState = _uiState.value
+        if (currentState !is SearchUiState.Success) return
 
-        /**
-         * ACTUALIZACIÓN DE ESTADO
-         * -----------------------
-         * Usamos copy() para crear un nuevo estado con los valores actualizados.
-         *
-         * IMPORTANTE: Nunca modifiques el estado directamente.
-         * Siempre crea una NUEVA instancia. Esto es esencial para que
-         * Compose detecte cambios y recomponga la UI.
-         *
-         * ❌ MAL:  _uiState.value.query = query
-         * ✅ BIEN: _uiState.value = _uiState.value.copy(query = query)
-         */
-        _uiState.value = _uiState.value.copy(
-            query = query,
-            results = results
-        )
+        try {
+            val results = if (query.isBlank()) {
+                emptyList()
+            } else {
+                searchSongs(query)
+            }
+
+            /**
+             * ACTUALIZACIÓN DE ESTADO CON SEALED INTERFACE
+             * --------------------------------------------
+             * Con sealed interface, primero verificamos que estamos en Success,
+             * luego usamos copy() para crear el nuevo estado.
+             *
+             * IMPORTANTE: Nunca modifiques el estado directamente.
+             * Siempre crea una NUEVA instancia. Esto es esencial para que
+             * Compose detecte cambios y recomponga la UI.
+             */
+            _uiState.value = currentState.copy(
+                query = query,
+                results = results
+            )
+        } catch (e: Exception) {
+            _uiState.value = SearchUiState.Error(
+                message = e.message ?: "Error al buscar"
+            )
+        }
     }
 
     /**
@@ -195,9 +257,37 @@ class SearchViewModel(
      * el botón "X" del campo de búsqueda.
      */
     fun clearSearch() {
-        _uiState.value = _uiState.value.copy(
+        val currentState = _uiState.value
+        if (currentState !is SearchUiState.Success) return
+
+        _uiState.value = currentState.copy(
             query = "",
             results = emptyList()
         )
+    }
+
+    /**
+     * Reintenta cargar las canciones después de un error.
+     *
+     * PATRÓN RETRY
+     * ------------
+     * Es buena práctica ofrecer al usuario la opción de reintentar
+     * cuando ocurre un error. Este método permite eso.
+     *
+     * En la UI:
+     * ```kotlin
+     * when (val state = uiState) {
+     *     is SearchUiState.Error -> {
+     *         ErrorScreen(
+     *             message = state.message,
+     *             onRetry = { viewModel.retry() }
+     *         )
+     *     }
+     *     // ...
+     * }
+     * ```
+     */
+    fun retry() {
+        loadSongs()
     }
 }

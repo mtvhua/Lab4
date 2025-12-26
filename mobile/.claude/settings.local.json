@@ -9,7 +9,12 @@
       "Bash(mkdir:*)",
       "Bash(curl:*)",
       "Bash(./gradlew:*)",
-      "Bash(gradle wrapper:*)"
+      "Bash(gradle wrapper:*)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(__NEW_LINE__ echo \"\")",
+      "Bash(for f in /Users/ykro/code/awa/mobile/module*/slides/slides.md)"
     ],
     "deny": [],
     "ask": []

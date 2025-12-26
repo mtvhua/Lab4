@@ -2,7 +2,7 @@ package com.curso.android.module2.stream.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.curso.android.module2.stream.data.model.Category
-import com.curso.android.module2.stream.data.repository.MockMusicRepository
+import com.curso.android.module2.stream.data.repository.MusicRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -103,17 +103,19 @@ sealed interface HomeUiState {
  *
  * @param repository Repositorio de música (inyectado por Koin)
  *
- * INYECCIÓN DE DEPENDENCIAS:
- * --------------------------
- * El repository se pasa como parámetro del constructor.
- * Koin automáticamente lo proporciona cuando crea el ViewModel.
+ * INYECCIÓN DE DEPENDENCIAS CON INTERFACE:
+ * ----------------------------------------
+ * El repository se pasa como parámetro del constructor, pero ahora
+ * depende de la INTERFACE MusicRepository en lugar de la clase concreta.
  *
  * Esto permite:
- * - Testing: Inyectar un mock repository en tests
+ * - Testing: Inyectar un FakeMusicRepository en tests
  * - Flexibilidad: Cambiar la implementación sin modificar el ViewModel
+ * - Principio de Inversión de Dependencias (DIP): El ViewModel depende
+ *   de una abstracción, no de una implementación concreta
  */
 class HomeViewModel(
-    private val repository: MockMusicRepository
+    private val repository: MusicRepository
 ) : ViewModel() {
 
     /**

@@ -28,7 +28,7 @@ Sin embargo, la mayor parte del theming se hace en Compose con MaterialTheme.
       - DayNight: Soporta modo oscuro automáticamente
       - NoActionBar: No queremos la ActionBar tradicional (usamos TopAppBar de Compose)
     -->
-    <style name="Theme.RPGDiceRollerApp" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.RPGDiceRollerApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!--
         Configuración para Edge-to-Edge UI.
         Estos atributos permiten que nuestra app dibuje detrás de las

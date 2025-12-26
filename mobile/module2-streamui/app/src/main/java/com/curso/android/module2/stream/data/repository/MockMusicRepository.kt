@@ -8,7 +8,7 @@ import com.curso.android.module2.stream.data.model.Song
  * MOCK MUSIC REPOSITORY
  * ================================================================================
  *
- * Repositorio que proporciona datos simulados para la aplicación.
+ * Implementación del repositorio que proporciona datos simulados.
  *
  * PATRÓN REPOSITORY
  * -----------------
@@ -23,13 +23,19 @@ import com.curso.android.module2.stream.data.model.Song
  * 2. Cambio de fuente de datos sin modificar ViewModels
  * 3. Single source of truth para los datos
  *
- * INTERFACE vs CLASS
- * ------------------
- * En una app real, definiríamos una interface MusicRepository y múltiples
- * implementaciones (MockMusicRepository, RemoteMusicRepository, etc.).
- * Para este ejemplo educativo, usamos una clase directa.
+ * IMPLEMENTANDO UNA INTERFACE
+ * ---------------------------
+ * Esta clase implementa MusicRepository, permitiendo que los ViewModels
+ * dependan de la interface (abstracción) en lugar de esta clase concreta.
+ *
+ * En producción podrías tener:
+ * - MockMusicRepository: Para desarrollo y previews (este archivo)
+ * - RemoteMusicRepository: Para producción con API real
+ * - CachedMusicRepository: Con cache local + sincronización remota
+ *
+ * La inyección de dependencias (Koin) decide cuál usar en cada contexto.
  */
-class MockMusicRepository {
+class MockMusicRepository : MusicRepository {
 
     /**
      * Obtiene todas las categorías con sus canciones.
@@ -37,7 +43,7 @@ class MockMusicRepository {
      * En una app real, esto sería una función suspend que haría una
      * llamada a red o base de datos. Aquí retornamos datos estáticos.
      */
-    fun getCategories(): List<Category> = categories
+    override fun getCategories(): List<Category> = categories
 
     /**
      * Busca una canción por su ID.
@@ -47,7 +53,7 @@ class MockMusicRepository {
      *
      * Nota: flatMap aplana la lista de listas de canciones en una sola lista
      */
-    fun getSongById(songId: String): Song? {
+    override fun getSongById(songId: String): Song? {
         return categories
             .flatMap { it.songs }
             .find { it.id == songId }
@@ -61,7 +67,7 @@ class MockMusicRepository {
      * Útil para búsquedas globales donde no importa la categoría.
      * flatMap convierte List<Category> → List<Song> aplanando las listas anidadas.
      */
-    fun getAllSongs(): List<Song> {
+    override fun getAllSongs(): List<Song> {
         return categories.flatMap { it.songs }
     }
 

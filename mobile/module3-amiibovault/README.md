@@ -79,6 +79,9 @@ app/src/main/java/com/curso/android/module3/amiibo/
 │       │   └── AmiiboApiService.kt  # Definición de endpoints
 │       └── model/
 │           └── AmiiboDto.kt      # DTOs para mapear JSON
+├── domain/
+│   └── error/
+│       └── AmiiboError.kt        # Tipos de errores (sealed class)
 ├── repository/
 │   └── AmiiboRepository.kt       # Patrón Repository
 ├── di/
@@ -178,6 +181,71 @@ val appModule = module {
 
 No usa generación de código ni reflexión.
 
+### 5. Tipos de Errores (Sealed Class)
+
+En lugar de propagar excepciones genéricas, usamos una `sealed class` para errores tipados:
+
+```kotlin
+sealed class AmiiboError(
+    override val message: String,
+    override val cause: Throwable? = null
+) : Exception(message, cause) {
+    class Network(...) : AmiiboError(...)   // Sin conexión
+    class Parse(...) : AmiiboError(...)     // JSON inválido
+    class Database(...) : AmiiboError(...)  // Error de Room
+    class Unknown(...) : AmiiboError(...)   // Otros errores
+}
+```
+
+**Beneficios:**
+- El compilador verifica que manejes todos los casos con `when`
+- La UI puede mostrar iconos diferentes por tipo de error
+- Se puede decidir si reintentar (Network sí, Parse no)
+- Mejor experiencia de usuario con mensajes específicos
+
+### 6. Configuración de Timeouts
+
+OkHttp está configurado con timeouts de 15 segundos:
+
+```kotlin
+OkHttpClient.Builder()
+    .connectTimeout(15, TimeUnit.SECONDS)  // Tiempo para conectar
+    .readTimeout(15, TimeUnit.SECONDS)     // Tiempo para leer respuesta
+    .writeTimeout(15, TimeUnit.SECONDS)    // Tiempo para enviar request
+    .build()
+```
+
+**¿Por qué 15 segundos?**
+- Balance entre espera y UX
+- Suficiente para conexiones móviles lentas
+- No demasiado largo que frustre al usuario
+
+### 7. Migraciones de Room (fallbackToDestructiveMigration)
+
+En desarrollo usamos `fallbackToDestructiveMigration()` que **BORRA todos los datos** si la versión de la BD cambia:
+
+```kotlin
+Room.databaseBuilder(...)
+    .fallbackToDestructiveMigration(dropAllTables = true)  // ⚠️ SOLO DESARROLLO
+    .build()
+```
+
+**En producción** debes usar migraciones manuales:
+
+```kotlin
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE amiibos ADD COLUMN favorite INTEGER DEFAULT 0")
+    }
+}
+
+Room.databaseBuilder(...)
+    .addMigrations(MIGRATION_1_2)
+    .build()
+```
+
+Ver: [Room Migrations Guide](https://developer.android.com/training/data-storage/room/migrating-db-versions)
+
 ## Cómo Ejecutar
 
 1. Clonar el repositorio
@@ -191,6 +259,22 @@ No usa generación de código ni reflexión.
 - JDK 17
 - Android SDK 36 (compileSdk)
 - Dispositivo/Emulador con API 24+ (minSdk)
+
+## Notas Educativas
+
+### Tests
+
+> **Nota**: Los tests unitarios están fuera del alcance de este módulo educativo. Sin embargo, la arquitectura con inyección de dependencias (Koin) y errores tipados está preparada para facilitar el testing:
+> - Los repositorios pueden ser mockeados fácilmente
+> - Los tipos de error permiten verificar manejo correcto de cada caso
+> - El patrón UiState hace los tests de ViewModel más claros
+
+### Recursos Adicionales
+
+- [Room with Kotlin Flows](https://developer.android.com/topic/libraries/architecture/room)
+- [Koin Documentation](https://insert-koin.io/docs/quickstart/kotlin/)
+- [Sealed Classes in Kotlin](https://kotlinlang.org/docs/sealed-classes.html)
+- [StateFlow and SharedFlow](https://developer.android.com/kotlin/flow/stateflow-and-sharedflow)
 
 ## Licencia
 

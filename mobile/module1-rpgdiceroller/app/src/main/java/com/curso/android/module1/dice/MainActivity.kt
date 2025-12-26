@@ -54,6 +54,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 
 // --- Compose UI ---
@@ -296,35 +297,61 @@ fun DiceRollerScreen() {
     // Cuando el estado cambia, Compose recompone automáticamente las partes
     // de la UI que dependen de ese estado.
     //
-    // ## remember { mutableStateOf(...) }
-    // - remember: Guarda el valor entre recomposiciones
-    // - mutableStateOf: Crea un objeto State observable
-    // - by: Delegado de Kotlin que permite usar la variable directamente
-    //       sin tener que acceder a .value
+    // ## remember vs rememberSaveable
+    // =========================================================================
+    // Ambos preservan el estado entre recomposiciones, pero hay una diferencia
+    // IMPORTANTE durante cambios de configuración (como rotación de pantalla):
     //
-    // Sin remember, el estado se resetearía en cada recomposición.
-    // Sin mutableStateOf, Compose no sabría cuándo recomponer.
+    // - remember { ... }
+    //   El estado se PIERDE cuando la Activity se recrea (rotación, cambio de tema).
+    //   Es suficiente para estado transitorio que no importa perder.
+    //
+    // - rememberSaveable { ... }
+    //   El estado se PRESERVA durante cambios de configuración.
+    //   Internamente usa el mecanismo de savedInstanceState de Android.
+    //   Ideal para datos que el usuario espera que persistan (formularios, etc).
+    //
+    // ## ¿Cuándo usar cada uno?
+    // - remember: Estado visual transitorio (animaciones, hover, scroll position)
+    // - rememberSaveable: Estado importante para el usuario (input de texto,
+    //                     selecciones, resultados de acciones)
+    //
+    // ## Limitaciones de rememberSaveable
+    // Solo puede guardar tipos que Android puede serializar:
+    // - Primitivos (Int, String, Boolean, etc.)
+    // - Parcelables y Serializables
+    // - Para objetos complejos, usa un Saver personalizado
     // =========================================================================
 
     /**
      * Valor actual del dado (1-20).
      *
-     * Usamos mutableIntStateOf en lugar de mutableStateOf<Int> porque es
-     * más eficiente para tipos primitivos (evita boxing/unboxing).
+     * Usamos rememberSaveable para que el resultado del último lanzamiento
+     * se preserve si el usuario rota la pantalla.
+     *
+     * mutableIntStateOf es más eficiente que mutableStateOf<Int> para
+     * tipos primitivos (evita boxing/unboxing).
      */
-    var diceValue by remember { mutableIntStateOf(MIN_DICE_VALUE) }
+    var diceValue by rememberSaveable { mutableIntStateOf(MIN_DICE_VALUE) }
 
     /**
      * Indica si el dado está "rodando" (animándose).
      * Mientras es true, el botón está deshabilitado.
+     *
+     * Usamos remember (no rememberSaveable) porque si ocurre una rotación
+     * durante la animación, es aceptable que la animación se reinicie.
+     * Este es un ejemplo de estado transitorio que no necesita persistirse.
      */
     var isRolling by remember { mutableStateOf(false) }
 
     /**
      * Mensaje que describe el resultado del lanzamiento.
      * Cambia según si sacamos 20 (Critical Hit), 1 (Critical Miss), u otro.
+     *
+     * Usamos rememberSaveable para mantener consistencia con diceValue.
+     * Si el valor se preserva, el mensaje también debería.
      */
-    var resultMessage by remember { mutableStateOf("Toca el botón para lanzar") }
+    var resultMessage by rememberSaveable { mutableStateOf("Toca el botón para lanzar") }
 
     // =========================================================================
     // COROUTINE SCOPE
@@ -631,7 +658,8 @@ fun DiceRollerScreenPreview() {
 
 ### 4. Jetpack Compose
 - `@Composable`: Marca funciones que describen UI
-- `remember`: Preserva estado entre recomposiciones
+- `remember`: Preserva estado entre recomposiciones (se pierde en rotación)
+- `rememberSaveable`: Preserva estado incluso durante cambios de configuración
 - `mutableStateOf`: Crea estado observable
 - `by`: Delegado para acceso simplificado al estado
 - Recomposición: Re-ejecución automática cuando el estado cambia

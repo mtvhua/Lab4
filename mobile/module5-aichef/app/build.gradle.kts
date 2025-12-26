@@ -23,6 +23,21 @@ plugins {
     // Firebase.ai NO funcionarán correctamente.
     // ==========================================================================
     alias(libs.plugins.google.services)
+
+    // ==========================================================================
+    // HILT - INYECCIÓN DE DEPENDENCIAS
+    // ==========================================================================
+    // Hilt usa generación de código para crear el grafo de dependencias.
+    // El plugin procesa las anotaciones (@Inject, @Module, @Binds) y
+    // genera las clases necesarias en compile-time.
+    //
+    // NOTA: Hilt no se cubrió en clase, se incluye como referencia avanzada.
+    // ==========================================================================
+    alias(libs.plugins.hilt.android)
+    kotlin("kapt") // Requerido para Hilt
+
+    // Kotlin Serialization para JSON parsing
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -151,11 +166,40 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // =========================================================================
+    // HILT - Inyección de Dependencias
+    // =========================================================================
+    // CONCEPTO: Hilt usa anotaciones para configurar DI:
+    // - @HiltAndroidApp: En la clase Application
+    // - @AndroidEntryPoint: En Activities/Fragments
+    // - @HiltViewModel: En ViewModels
+    // - @Inject constructor: Para recibir dependencias
+    // - @Module + @Binds: Para proveer interfaces
+    //
+    // El compilador (kapt) genera el código necesario en compile-time.
+    // =========================================================================
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.hilt.navigation.compose)
+
+    // =========================================================================
+    // SERIALIZATION - Para JSON parsing
+    // =========================================================================
+    implementation(libs.kotlinx.serialization.json)
+
+    // =========================================================================
     // TESTING
     // =========================================================================
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+}
+
+// Configuración de KAPT para Hilt
+kapt {
+    correctErrorTypes = true
 }

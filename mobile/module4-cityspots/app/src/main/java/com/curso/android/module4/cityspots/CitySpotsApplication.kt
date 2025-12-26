@@ -1,6 +1,11 @@
 package com.curso.android.module4.cityspots
 
 import android.app.Application
+import com.curso.android.module4.cityspots.di.appModule
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 
 /**
  * =============================================================================
@@ -24,11 +29,15 @@ import android.app.Application
  *     android:name=".CitySpotsApplication"
  *     ... />
  *
- * NOTA SOBRE DI (Dependency Injection):
- * En este proyecto usamos inicialización manual (singleton pattern) por
- * simplicidad educativa. En proyectos más grandes, considera usar:
- * - Hilt: Recomendado por Google, basado en Dagger
- * - Koin: Más simple, basado en DSL de Kotlin
+ * KOIN DEPENDENCY INJECTION
+ * -------------------------
+ * Este proyecto usa Koin para DI. Koin se inicializa en onCreate() y
+ * proporciona todas las dependencias de la app de forma automática.
+ *
+ * Beneficios de Koin:
+ * - DSL de Kotlin puro (sin anotaciones)
+ * - Setup rápido y fácil de entender
+ * - Buena integración con Compose via koinViewModel()
  *
  * =============================================================================
  */
@@ -46,26 +55,44 @@ class CitySpotsApplication : Application() {
         super.onCreate()
 
         // Guardar referencia global para acceso desde cualquier lugar
-        // NOTA: Esto es un patrón simple, en producción usar DI
+        // NOTA: Mantenemos esto por compatibilidad, pero preferimos Koin para DI
         instance = this
 
-        // Aquí podrías inicializar:
-        // - Firebase: FirebaseApp.initializeApp(this)
-        // - Timber (logging): Timber.plant(Timber.DebugTree())
-        // - Crashlytics: FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
-        // - Koin: startKoin { modules(appModule) }
+        // =====================================================================
+        // INICIALIZACIÓN DE KOIN
+        // =====================================================================
+        // startKoin() configura el framework de DI.
+        //
+        // COMPONENTES:
+        // - androidLogger(): Logger para debug (desactivar en release)
+        // - androidContext(): Proporciona Application context a los módulos
+        // - modules(): Lista de módulos con definiciones de dependencias
+        //
+        // ORDEN DE INICIALIZACIÓN:
+        // 1. startKoin() crea el contenedor de dependencias
+        // 2. Los módulos registran sus definiciones
+        // 3. Las dependencias se resuelven cuando se solicitan (lazy)
+        // =====================================================================
+        startKoin {
+            // Logger de Koin para debug (usa Level.NONE en producción)
+            androidLogger(Level.DEBUG)
+
+            // Proporciona el Application context a los módulos
+            // Esto permite usar androidContext() en las definiciones
+            androidContext(this@CitySpotsApplication)
+
+            // Registra los módulos de dependencias
+            modules(appModule)
+        }
     }
 
     companion object {
         /**
          * Instancia singleton de la Application
          *
-         * ADVERTENCIA: Usar con precaución
-         * Este patrón es conveniente pero puede causar memory leaks
-         * si se usa incorrectamente. Preferir DI en proyectos grandes.
-         *
-         * Uso:
-         * val context = CitySpotsApplication.instance
+         * NOTA: Este patrón se mantiene por compatibilidad, pero con Koin
+         * puedes obtener el context usando androidContext() en los módulos
+         * o inject<Application>() donde lo necesites.
          */
         lateinit var instance: CitySpotsApplication
             private set

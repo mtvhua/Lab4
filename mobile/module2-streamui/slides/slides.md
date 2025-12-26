@@ -23,16 +23,25 @@ style: |
 
 # Agenda
 
-1. **Advanced UI & Navigation** 
-2. **MVVM & UDF** 
-3. **Dependency Injection** 
-4. **Deep Dive**
-5. **Challenge Lab**
+1. **Module App**
+2. **Advanced UI & Navigation**
+3. **MVVM & UDF**
+4. **Dependency Injection**
+5. **Deep Dive**
+6. **Challenge Lab**
+
+---
+
+## StreamUI App
+
+![w:220px](../assets/screenshot_3.png) ![w:220px](../assets/screenshot_1.png) ![w:220px](../assets/screenshot_2.png)
+
+(Home | Search | Player)
 
 ---
 
 <!-- _class: lead -->
-# 1. Advanced UI & Navigation
+# 2. Advanced UI & Navigation
 
 
 ---
@@ -154,15 +163,6 @@ Use `popUpTo` to avoid infinite stacks (e.g., Home -> Search -> Home -> Search..
 
 ---
 
-
-## Visuals: Project Overview
-
-![w:220px](../assets/screenshot_3.png) ![w:220px](../assets/screenshot_1.png) ![w:220px](../assets/screenshot_2.png)
-
-(Home | Search | Player)
-
----
-
 ## Navigation with Tabs 
 
 Tabs allow switching between top-level destinations.
@@ -196,7 +196,7 @@ MainActivity
 
 <!-- _class: lead -->
 
-# 2. MVVM & Basic UDF
+# 3. MVVM & Basic UDF
 ## Bringing order to chaos
 
 ---
@@ -373,7 +373,7 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
 
 
 <!-- _class: lead -->
-# 3. Dependency Injection
+# 4. Dependency Injection
 
 ---
 
@@ -505,7 +505,7 @@ fun HomeScreen(
 
 <!-- _class: lead -->
 
-# Deep Dive
+# 5. Deep Dive
 
 
 ---
@@ -621,37 +621,75 @@ Saves state across configuration changes and survives until the screen is destro
 ---
 
 <!-- _class: lead -->
-# Challenge Lab
+# 6. Challenge Lab
+## Practice & Application
 
 ---
 
-## Part 1: Refactoring (Guided)
-**Objective**: Enhance `SongCard` to support a "Favorite" action.
+## Part 1: Song Favorites
 
-1.  **Modify Model**: Add `isFavorite: Boolean` to `Song` data class.
-2.  **Modify UI**: Add a `HeartIcon` to `SongCard`.
-3.  **Lift State**: Explain why `SongCard` shouldn't handle the click internally.
-    *   Add `onFavoriteClick: (String) -> Unit` to `SongCard`.
-    *   Pass it up to `HomeScreen` and then `HomeViewModel`.
-4.  **Implement Logic**: Add `toggleFavorite(id: String)` in `HomeViewModel`.
-    *(Hint: You might need to make the Repository mutable or fake it in the VM)*
+**Context:**
+Users want to mark songs as favorites. This requires understanding state hoisting and event propagation in MVVM.
+
+**Your Task:**
+Implement a favorites system that:
+- Adds a heart icon to each `SongCard`
+- Toggles favorite status when tapped
+- Propagates the event from UI → ViewModel → Repository
+- Demonstrates why child Composables shouldn't own state
+
+**Files to Modify:**
+- `data/model/Models.kt` (Song data class)
+- `ui/components/SongCard.kt`
+- `ui/screens/HomeScreen.kt`
+- `ui/viewmodel/HomeViewModel.kt`
 
 ---
 
-## Part 2:  Create a **Highlights** Screen
+## Part 1: Definition of Done
 
+| Criteria | Description |
+|----------|-------------|
+| Model updated | `Song` has `isFavorite: Boolean = false` field |
+| Heart icon visible | Each SongCard shows heart icon (filled/outlined) |
+| Event hoisting | `SongCard` receives `onFavoriteClick: (String) -> Unit` |
+| ViewModel handles | `toggleFavorite(id: String)` method in ViewModel |
+| State updates | Clicking heart updates the song's favorite status |
+| UI reflects change | Heart icon toggles between filled/outlined |
+| No state in child | `SongCard` is stateless (receives data, emits events) |
 
-1.  **Create Route**: Define `HighlightsDestination` in `Destinations.kt`.
-2.  **Create Screen**: `HighlightsScreen.kt`.
-    *   Should display a grid of "Favorite" songs.
-3.  **Navigation**: Add a "Star" icon in the `TopAppBar` of `HomeScreen` to navigate there.
-4.  **Dependency**: Reuse `HomeViewModel` or create `HighlightsViewModel`?
-    *   *Constraint*: Try sharing the `HomeViewModel` first to see shared state in action.
+---
 
-5.  **Bottom Navigation**:
-    *   Implement a `Scaffold` with `bottomBar` in `MainActivity`.
-    *   Add tabs for "Home" and "Highlights".
-    *   Connect the tabs to the Navigation Graph.
+## Part 2: Highlights Screen with Bottom Navigation
+
+**Context:**
+Create a new screen that shows only favorite songs, accessible via bottom navigation tabs.
+
+**Your Task:**
+Implement navigation that:
+- Adds a new `HighlightsDestination` route
+- Creates `HighlightsScreen` showing only favorites
+- Implements bottom navigation with Home and Highlights tabs
+- Shares state between screens (favorites sync in real-time)
+
+**Files to Modify/Create:**
+- `ui/navigation/Destinations.kt`
+- Create `ui/screens/HighlightsScreen.kt`
+- `MainActivity.kt` (add Scaffold with bottomBar)
+
+---
+
+## Part 2: Definition of Done
+
+| Criteria | Description |
+|----------|-------------|
+| Route exists | `HighlightsDestination` defined with @Serializable |
+| Screen created | `HighlightsScreen.kt` displays filtered favorites |
+| Bottom nav visible | `NavigationBar` with 2 `NavigationBarItem` |
+| Tab switching works | Tapping tabs navigates between screens |
+| Icons correct | Home icon for Home, Star icon for Highlights |
+| State shared | Favoriting on Home reflects on Highlights immediately |
+| Current tab highlighted | Active tab visually distinguished |
 
 
 <!-- _class: lead -->
@@ -681,4 +719,18 @@ Saves state across configuration changes and survives until the screen is destro
 3.  [**Manual Dependency Injection**](https://developer.android.com/training/dependency-injection/manual)
 4.  [**Hilt vs Koin**](https://medium.com/android-news/hilt-vs-koin-dependency-injection-frameworks-for-android-69375543c7b8)
 5.  [**Video: DI in a Nutshell**](https://www.youtube.com/watch?v=eH9UrciQqYA)
+
+---
+
+## Recommended Articles
+
+**Architecture & MVVM**
+*   [ViewModels: A Simple Example](https://medium.com/androiddevelopers/viewmodels-a-simple-example-ed5ac416317e) - Android Developers
+*   [The Clean Architecture: Beginners Guide](https://proandroiddev.com/clean-architecture-in-android-a-beginners-approach-4af32b2f9d0e) - ProAndroidDev
+*   [UI State Production in Android](https://medium.com/androiddevelopers/ui-state-production-flow-5fe5fdfe1bc5) - Android Developers
+
+**Navigation Compose**
+*   [Navigation Compose Meet Safe Args](https://medium.com/androiddevelopers/navigation-compose-meet-type-safety-e081fb3cf2f8) - Android Developers
+*   [Nested Navigation Graphs in Compose](https://proandroiddev.com/nested-navigation-graphs-in-jetpack-compose-2c5bc5c6f27a) - ProAndroidDev
+*   [Deep Links in Navigation Compose](https://dev.to/manuelvicnt/deep-links-in-navigation-compose-3hni) - Manuel Vivo
 

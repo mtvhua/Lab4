@@ -65,6 +65,10 @@ lifecycleViewModelCompose = "2.8.7"
 # Coil - Image Loading
 coil = "2.7.0"
 
+# Koin - Dependency Injection
+# Framework de DI basado en DSL de Kotlin, más ligero que Hilt
+koinBom = "4.1.1"
+
 # Testing
 junit = "4.13.2"
 junitExt = "1.2.1"
@@ -129,6 +133,16 @@ androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "l
 # Coil - Image Loading para Compose
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
+# Koin - Dependency Injection
+# BOM para sincronizar versiones de todas las librerías Koin
+koin-bom = { group = "io.insert-koin", name = "koin-bom", version.ref = "koinBom" }
+
+# Koin para Android (incluye soporte para ViewModel)
+koin-android = { group = "io.insert-koin", name = "koin-android" }
+
+# Koin para Compose (incluye koinViewModel() para obtener ViewModels)
+koin-compose = { group = "io.insert-koin", name = "koin-compose" }
+
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitExt" }
@@ -180,4 +194,10 @@ maps = [
     "maps-compose",
     "play-services-location",
     "play-services-maps"
+]
+
+# Bundle de Koin (DI)
+koin = [
+    "koin-android",
+    "koin-compose"
 ]

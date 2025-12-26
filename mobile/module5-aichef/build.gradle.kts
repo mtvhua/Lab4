@@ -26,4 +26,31 @@ plugins {
     // El archivo google-services.json debe descargarse de Firebase Console.
     // ==========================================================================
     alias(libs.plugins.google.services) apply false
+
+    // ==========================================================================
+    // HILT PLUGIN - INYECCIÓN DE DEPENDENCIAS
+    // ==========================================================================
+    // Hilt es el framework de DI recomendado por Google para Android.
+    //
+    // COMPARACIÓN HILT VS KOIN:
+    // ┌─────────────────────────┬─────────────────────────┐
+    // │          HILT           │          KOIN           │
+    // ├─────────────────────────┼─────────────────────────┤
+    // │ Anotaciones (@Inject)   │ DSL de Kotlin           │
+    // │ Validación compile-time │ Validación runtime      │
+    // │ Generación de código    │ Sin generación          │
+    // │ Curva de aprendizaje ↑  │ Más fácil de aprender   │
+    // │ Mejor para apps grandes │ Ideal para apps medianas│
+    // │ Oficial de Google       │ Comunidad               │
+    // └─────────────────────────┴─────────────────────────┘
+    //
+    // En este módulo usamos Hilt para demostrar un enfoque diferente
+    // al Koin usado en los módulos anteriores.
+    //
+    // NOTA: Hilt no se cubrió en clase, se incluye como referencia.
+    // ==========================================================================
+    alias(libs.plugins.hilt.android) apply false
+
+    // Kotlin Serialization para parsing de JSON
+    alias(libs.plugins.kotlin.serialization) apply false
 }
