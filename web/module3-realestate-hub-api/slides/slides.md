@@ -14,8 +14,8 @@ style: |
 ---
 
 <!-- _class: lead -->
-# Módulo 3: Backend API
-## Node.js, Express & Base de Datos
+# Module 3: Backend API
+## Node.js, Express & Database
 ### Adrián Catalán
 ### adriancatalan@galileo.edu
 
@@ -23,10 +23,10 @@ style: |
 
 ## Agenda
 
-1.  **Proyecto: EstateHub API**
+1.  **Project: EstateHub API**
 2.  **Node.js & Express Basics**
 3.  **Controllers & Middlewares**
-4.  **Conexión con Base de Datos**
+4.  **Database Connection**
 5.  **Deep Dive**
 6.  **Challenge Lab**
 

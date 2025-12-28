@@ -14,7 +14,7 @@ style: |
 ---
 
 <!-- _class: lead -->
-# Módulo 5: Firebase, AI & Deploy
+# Module 5: Firebase, AI & Deploy
 ## Firebase Auth/Firestore, Gemini API & Deploy
 ### Adrián Catalán
 ### adriancatalan@galileo.edu
@@ -23,10 +23,10 @@ style: |
 
 ## Agenda
 
-1.  **Proyecto: EventPass Pro**
+1.  **Project: EventPass Pro**
 2.  **Firebase Auth, Firestore & Storage**
-3.  **Uso de Gemini API**
-4.  **Deploy a Vercel y Google Cloud Run**
+3.  **Using Gemini API**
+4.  **Deploy to Vercel and Google Cloud Run**
 5.  **Deep Dive**
 6.  **Challenge Lab**
 
@@ -252,9 +252,9 @@ export function LoginForm() {
             <input type="email" value={email} onChange={...} />
             <input type="password" value={password} onChange={...} />
             {error && <p className="text-red-500">{error}</p>}
-            <button type="submit">Iniciar Sesión</button>
+            <button type="submit">Sign In</button>
             <button type="button" onClick={signInWithGoogle}>
-                Continuar con Google
+                Continue with Google
             </button>
         </form>
     );
@@ -281,7 +281,7 @@ import {
 export function UserMenu() {
     const { user, signOut } = useAuth();
 
-    if (!user) return <Link href="/auth">Iniciar Sesión</Link>;
+    if (!user) return <Link href="/auth">Sign In</Link>;
 
     return (
         <DropdownMenu>
@@ -290,7 +290,7 @@ export function UserMenu() {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
                 <DropdownMenuItem>{user.email}</DropdownMenuItem>
-                <DropdownMenuItem onClick={signOut}>Cerrar Sesión</DropdownMenuItem>
+                <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -316,7 +316,7 @@ A NoSQL document database with real-time sync.
 │  events (Collection)                                             │
 │    │                                                             │
 │    ├── abc123 (Document)                                         │
-│    │     ├── title: "Conferencia Web"                            │
+│    │     ├── title: "Web Conference"                              │
 │    │     ├── description: "..."                                  │
 │    │     ├── organizerId: "user_xyz"                             │
 │    │     ├── date: Timestamp                                     │
@@ -452,7 +452,7 @@ export async function registerForEvent(eventId: string): Promise<Event | null> {
 
         const data = docSnap.data()!;
         if (data.registeredCount >= data.capacity) return null;
-        if (data.status !== 'publicado') return null;
+        if (data.status !== 'published') return null;
 
         transaction.update(docRef, {
             registeredCount: data.registeredCount + 1,
@@ -477,7 +477,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /events/{eventId} {
       // Anyone can read published events
-      allow read: if resource.data.status == 'publicado';
+      allow read: if resource.data.status == 'published';
 
       // Only owner can create (must set own organizerId)
       allow create: if request.auth != null
@@ -516,7 +516,7 @@ export async function generateEventDescription(input: {
 }): Promise<string> {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    const prompt = `Generate a compelling event description in Spanish for:
+    const prompt = `Generate a compelling event description for:
         Title: ${input.title}
         Category: ${input.category}
         Date: ${input.date}
@@ -601,7 +601,7 @@ export function GenerateDescriptionButton({ eventData, onGenerated }: Props) {
 
     return (
         <button onClick={handleGenerate} disabled={loading}>
-            {loading ? 'Generando...' : '✨ Generar con IA'}
+            {loading ? 'Generating...' : '✨ Generate with AI'}
         </button>
     );
 }
@@ -778,13 +778,13 @@ Map Firebase error codes to user-friendly messages.
 // contexts/AuthContext.tsx
 function translateFirebaseError(message: string): string {
     const translations: Record<string, string> = {
-        'auth/email-already-in-use': 'Este email ya está registrado',
-        'auth/invalid-email': 'Email inválido',
-        'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
-        'auth/user-not-found': 'No existe una cuenta con este email',
-        'auth/wrong-password': 'Contraseña incorrecta',
-        'auth/invalid-credential': 'Credenciales inválidas',
-        'auth/popup-closed-by-user': 'Se cerró la ventana de autenticación',
+        'auth/email-already-in-use': 'This email is already registered',
+        'auth/invalid-email': 'Invalid email address',
+        'auth/weak-password': 'Password must be at least 6 characters',
+        'auth/user-not-found': 'No account exists with this email',
+        'auth/wrong-password': 'Incorrect password',
+        'auth/invalid-credential': 'Invalid credentials',
+        'auth/popup-closed-by-user': 'Authentication window was closed',
     };
 
     for (const [code, translation] of Object.entries(translations)) {

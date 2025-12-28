@@ -14,7 +14,7 @@ style: |
 ---
 
 <!-- _class: lead -->
-# Módulo 2: Frontend Single Page Applications
+# Module 2: Frontend Single Page Applications
 ## React Core, Forms & Routing
 ### Adrián Catalán
 ### adriancatalan@galileo.edu
@@ -23,7 +23,7 @@ style: |
 
 ## Agenda
 
-1.  **Proyecto: Real Estate React**
+1.  **Project: Real Estate React**
 2.  **React Core (Vite) & Hooks**
 3.  **Forms (Zod + React Hook Form)**
 4.  **Routing & LocalStorage**

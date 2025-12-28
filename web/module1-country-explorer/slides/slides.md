@@ -14,7 +14,7 @@ style: |
 ---
 
 <!-- _class: lead -->
-# Módulo 1: Fundamentos
+# Module 1: Fundamentals
 ## HTML/Tailwind/DOM, JS Async & Fetch, TypeScript
 ### Adrián Catalán
 ### adriancatalan@galileo.edu
@@ -23,10 +23,10 @@ style: |
 
 ## Agenda
 
-1.  **Proyecto: Country Explorer**
+1.  **Project: Country Explorer**
 2.  **HTML, Tailwind CSS & DOM**
 3.  **JavaScript Async & Fetch API**
-4.  **TypeScript Introducción**
+4.  **TypeScript Introduction**
 5.  **Deep Dive**
 6.  **Challenge Lab**
 

@@ -14,7 +14,7 @@ style: |
 ---
 
 <!-- _class: lead -->
-# Módulo 4: Next.js
+# Module 4: Next.js
 ## App Router, Server Components & Server Actions
 ### Adrián Catalán
 ### adriancatalan@galileo.edu
@@ -23,9 +23,9 @@ style: |
 
 ## Agenda
 
-1.  **Proyecto: EventPass**
+1.  **Project: EventPass**
 2.  **App Router & Server Components**
-3.  **Server Actions (Sin API manual)**
+3.  **Server Actions (No manual API)**
 4.  **Streaming & Suspense**
 5.  **Deep Dive**
 6.  **Challenge Lab**
@@ -199,10 +199,10 @@ interface ErrorProps {
 export default function Error({ error, reset }: ErrorProps) {
     return (
         <div className="text-center py-8">
-            <h2>Algo salió mal</h2>
+            <h2>Something went wrong</h2>
             <p>{error.message}</p>
             <button onClick={reset}>
-                Intentar de nuevo
+                Try again
             </button>
         </div>
     );
@@ -221,13 +221,13 @@ import Link from 'next/link';
 function Navigation() {
     return (
         <nav>
-            <Link href="/">Inicio</Link>
-            <Link href="/events">Eventos</Link>
-            <Link href="/events/new">Crear Evento</Link>
+            <Link href="/">Home</Link>
+            <Link href="/events">Events</Link>
+            <Link href="/events/new">Create Event</Link>
 
             {/* Dynamic link */}
             <Link href={`/events/${event.id}`}>
-                Ver Detalles
+                View Details
             </Link>
         </nav>
     );
@@ -243,7 +243,7 @@ function Navigation() {
 Access URL query parameters.
 
 ```tsx
-// /events?category=musica&status=publicado
+// /events?category=music&status=published
 
 interface PageProps {
     searchParams: Promise<{
@@ -345,7 +345,7 @@ export function RegisterButton({ eventId }: { eventId: string }) {
 
     return (
         <button onClick={handleClick} disabled={isRegistered}>
-            {isRegistered ? 'Registrado' : 'Registrarse'}
+            {isRegistered ? 'Registered' : 'Register'}
         </button>
     );
 }
@@ -449,7 +449,7 @@ export function EventForm() {
             <input name="title" required />
             <textarea name="description" required />
             <button type="submit">
-                Crear Evento
+                Create Event
             </button>
         </form>
     );
@@ -483,7 +483,7 @@ export function EventForm() {
             {state.error && <p className="error">{state.error}</p>}
 
             <button disabled={isPending}>
-                {isPending ? 'Creando...' : 'Crear Evento'}
+                {isPending ? 'Creating...' : 'Create Event'}
             </button>
         </form>
     );
@@ -541,10 +541,10 @@ function SubmitButton() {
         <button type="submit" disabled={pending}>
             {pending ? (
                 <>
-                    <Spinner /> Guardando...
+                    <Spinner /> Saving...
                 </>
             ) : (
-                'Guardar Evento'
+                'Save Event'
             )}
         </button>
     );
@@ -581,7 +581,7 @@ export function RegisterButton({ event }: { event: Event }) {
 
     return (
         <button onClick={handleRegister}>
-            Registrarse ({optimisticCount} / {event.capacity})
+            Register ({optimisticCount} / {event.capacity})
         </button>
     );
 }
@@ -686,7 +686,7 @@ import { Suspense } from 'react';
 export default function EventsPage() {
     return (
         <div>
-            <h1>Eventos</h1>
+            <h1>Events</h1>
 
             {/* This streams independently */}
             <Suspense fallback={<EventsSkeleton />}>
@@ -792,7 +792,7 @@ Implement URL-based filtering that:
 
 | Criteria | Description |
 |----------|-------------|
-| URL updates | Selecting filter changes URL (`?category=musica`) |
+| URL updates | Selecting filter changes URL (`?category=music`) |
 | Filters persist | Refreshing page keeps filters |
 | Server filtering | Filters applied on server, not client |
 | Active state | Selected filters visually highlighted |
