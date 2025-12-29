@@ -1,6 +1,7 @@
 package com.curso.android.module2.stream.data.repository
 
 import com.curso.android.module2.stream.data.model.Category
+import com.curso.android.module2.stream.data.model.Playlist
 import com.curso.android.module2.stream.data.model.Song
 
 /**
@@ -83,4 +84,11 @@ interface MusicRepository {
      * @return Lista plana de todas las canciones disponibles
      */
     fun getAllSongs(): List<Song>
+
+    /**
+     * Obtiene las playlists del usuario (para la pantalla Library).
+     *
+     * @return Lista de playlists guardadas
+     */
+    fun getPlaylists(): List<Playlist>
 }

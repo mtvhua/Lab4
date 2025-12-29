@@ -3,6 +3,7 @@ package com.curso.android.module2.stream.di
 import com.curso.android.module2.stream.data.repository.MockMusicRepository
 import com.curso.android.module2.stream.data.repository.MusicRepository
 import com.curso.android.module2.stream.ui.viewmodel.HomeViewModel
+import com.curso.android.module2.stream.ui.viewmodel.LibraryViewModel
 import com.curso.android.module2.stream.ui.viewmodel.SearchViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -137,4 +138,15 @@ val appModule = module {
      * - Cache compartido (si el repository tuviera)
      */
     viewModelOf(::SearchViewModel)
+
+    /**
+     * LIBRARYVIEWMODEL
+     * ----------------
+     * Tercer ViewModel para la pantalla Library (Biblioteca).
+     *
+     * Igual que los otros ViewModels, comparte la misma instancia
+     * del MusicRepository. Este ViewModel es parte del sistema de
+     * BottomNavigation y maneja el estado de las playlists.
+     */
+    viewModelOf(::LibraryViewModel)
 }

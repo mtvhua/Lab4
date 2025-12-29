@@ -1,6 +1,7 @@
 package com.curso.android.module2.stream.data.repository
 
 import com.curso.android.module2.stream.data.model.Category
+import com.curso.android.module2.stream.data.model.Playlist
 import com.curso.android.module2.stream.data.model.Song
 
 /**
@@ -70,6 +71,13 @@ class MockMusicRepository : MusicRepository {
     override fun getAllSongs(): List<Song> {
         return categories.flatMap { it.songs }
     }
+
+    /**
+     * Obtiene las playlists del usuario.
+     *
+     * @return Lista de playlists guardadas
+     */
+    override fun getPlaylists(): List<Playlist> = playlists
 
     companion object {
         /**
@@ -172,6 +180,56 @@ class MockMusicRepository : MusicRepository {
                     Song("latin_9", "Mi Gente", "J Balvin", 0xFFFFE57F.toInt()),
                     Song("latin_10", "Gasolina", "Daddy Yankee", 0xFFEA80FC.toInt())
                 )
+            )
+        )
+
+        /**
+         * Playlists mock del usuario.
+         *
+         * Representan las playlists guardadas por el usuario en su biblioteca.
+         */
+        private val playlists = listOf(
+            Playlist(
+                id = "playlist_1",
+                name = "My Favorites",
+                description = "Songs I love the most",
+                songCount = 25,
+                colorSeed = 0xFF1E88E5.toInt()
+            ),
+            Playlist(
+                id = "playlist_2",
+                name = "Workout Mix",
+                description = "High energy tracks for the gym",
+                songCount = 18,
+                colorSeed = 0xFFE53935.toInt()
+            ),
+            Playlist(
+                id = "playlist_3",
+                name = "Chill Evening",
+                description = "Relaxing tunes for unwinding",
+                songCount = 32,
+                colorSeed = 0xFF7CB342.toInt()
+            ),
+            Playlist(
+                id = "playlist_4",
+                name = "Road Trip",
+                description = "Perfect for long drives",
+                songCount = 45,
+                colorSeed = 0xFFFB8C00.toInt()
+            ),
+            Playlist(
+                id = "playlist_5",
+                name = "Focus Mode",
+                description = "Concentration and productivity",
+                songCount = 20,
+                colorSeed = 0xFF8E24AA.toInt()
+            ),
+            Playlist(
+                id = "playlist_6",
+                name = "Party Hits",
+                description = "Get the party started",
+                songCount = 38,
+                colorSeed = 0xFF00ACC1.toInt()
             )
         )
     }

@@ -85,6 +85,21 @@ data object HomeDestination
 data object SearchDestination
 
 /**
+ * Destino: Pantalla de Biblioteca (Library)
+ *
+ * Muestra las playlists guardadas del usuario.
+ * Es parte del BottomNavigation junto con Home y Search.
+ *
+ * BOTTOM NAVIGATION:
+ * -----------------
+ * Las tres pantallas principales (Home, Search, Library) forman
+ * los tabs del BottomNavigation. Cada una tiene su propio ViewModel
+ * y mantiene su estado independiente.
+ */
+@Serializable
+data object LibraryDestination
+
+/**
  * Destino: Pantalla del Reproductor
  *
  * @property songId ID de la canción a reproducir
