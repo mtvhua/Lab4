@@ -64,7 +64,7 @@ function getFirebaseApp(): FirebaseApp | null {
 
   if (!hasFirebaseCredentials()) {
     if (typeof window !== 'undefined') {
-      console.warn('⚠️ Firebase: Credenciales no configuradas. La autenticación no funcionará.');
+      console.warn('Firebase: Credenciales no configuradas. La autenticacion no funcionara.');
     }
     return null;
   }

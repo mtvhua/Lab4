@@ -119,38 +119,40 @@ export function EventForm(): React.ReactElement {
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Información Básica</h3>
 
-            {/* Título */}
+            {/* Titulo */}
             <div className="space-y-2">
-              <Label htmlFor="title">Título del evento *</Label>
+              <Label htmlFor="title">Titulo del evento *</Label>
               <Input
                 id="title"
                 name="title"
                 placeholder="Ej: Conferencia de Desarrollo Web 2025"
+                defaultValue={state.values?.title}
                 required
               />
               <FieldError errors={state.errors?.title} />
             </div>
 
-            {/* Descripción */}
+            {/* Descripcion */}
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción *</Label>
+              <Label htmlFor="description">Descripcion *</Label>
               <Textarea
                 id="description"
                 name="description"
-                placeholder="Describe tu evento en detalle (mínimo 20 caracteres)"
+                placeholder="Describe tu evento en detalle (minimo 20 caracteres)"
+                defaultValue={state.values?.description}
                 rows={4}
                 required
               />
               <FieldError errors={state.errors?.description} />
             </div>
 
-            {/* Categoría y Estado */}
+            {/* Categoria y Estado */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="category">Categoría *</Label>
-                <Select name="category" required>
+                <Label htmlFor="category">Categoria *</Label>
+                <Select name="category" defaultValue={state.values?.category} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona categoría" />
+                    <SelectValue placeholder="Selecciona categoria" />
                   </SelectTrigger>
                   <SelectContent>
                     {EVENT_CATEGORIES.map((cat) => (
@@ -165,7 +167,7 @@ export function EventForm(): React.ReactElement {
 
               <div className="space-y-2">
                 <Label htmlFor="status">Estado *</Label>
-                <Select name="status" defaultValue="borrador">
+                <Select name="status" defaultValue={state.values?.status ?? 'publicado'}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona estado" />
                   </SelectTrigger>
@@ -182,38 +184,39 @@ export function EventForm(): React.ReactElement {
             </div>
           </div>
 
-          {/* Fecha y ubicación */}
+          {/* Fecha y ubicacion */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Fecha y Ubicación</h3>
+            <h3 className="text-lg font-medium">Fecha y Ubicacion</h3>
 
             {/* Fechas */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="date">Fecha de inicio *</Label>
-                <Input id="date" name="date" type="datetime-local" required />
+                <Input id="date" name="date" type="datetime-local" defaultValue={state.values?.date} required />
                 <FieldError errors={state.errors?.date} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="endDate">Fecha de fin</Label>
-                <Input id="endDate" name="endDate" type="datetime-local" />
+                <Input id="endDate" name="endDate" type="datetime-local" defaultValue={state.values?.endDate} />
                 <FieldError errors={state.errors?.endDate} />
               </div>
             </div>
 
-            {/* Ubicación */}
+            {/* Ubicacion */}
             <div className="space-y-2">
               <Label htmlFor="location">Lugar *</Label>
-              <Input id="location" name="location" placeholder="Ej: Centro de Convenciones" required />
+              <Input id="location" name="location" placeholder="Ej: Centro de Convenciones" defaultValue={state.values?.location} required />
               <FieldError errors={state.errors?.location} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Dirección completa *</Label>
+              <Label htmlFor="address">Direccion completa *</Label>
               <Input
                 id="address"
                 name="address"
                 placeholder="Ej: Calle Principal 123, 28001 Madrid"
+                defaultValue={state.values?.address}
                 required
               />
               <FieldError errors={state.errors?.address} />
@@ -226,20 +229,21 @@ export function EventForm(): React.ReactElement {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="capacity">Capacidad máxima *</Label>
+                <Label htmlFor="capacity">Capacidad maxima *</Label>
                 <Input
                   id="capacity"
                   name="capacity"
                   type="number"
                   min="1"
                   placeholder="100"
+                  defaultValue={state.values?.capacity}
                   required
                 />
                 <FieldError errors={state.errors?.capacity} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Precio (€) *</Label>
+                <Label htmlFor="price">Precio ($) *</Label>
                 <Input
                   id="price"
                   name="price"
@@ -247,6 +251,7 @@ export function EventForm(): React.ReactElement {
                   min="0"
                   step="0.01"
                   placeholder="0 para eventos gratuitos"
+                  defaultValue={state.values?.price}
                   required
                 />
                 <FieldError errors={state.errors?.price} />
@@ -265,26 +270,27 @@ export function EventForm(): React.ReactElement {
                 name="imageUrl"
                 type="url"
                 placeholder="https://ejemplo.com/imagen.jpg"
+                defaultValue={state.values?.imageUrl}
               />
               <FieldError errors={state.errors?.imageUrl} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="tags">Etiquetas (separadas por coma)</Label>
-              <Input id="tags" name="tags" placeholder="react, javascript, conferencia" />
-              <p className="text-sm text-muted-foreground">Máximo 5 etiquetas</p>
+              <Input id="tags" name="tags" placeholder="react, javascript, conferencia" defaultValue={state.values?.tags} />
+              <p className="text-sm text-muted-foreground">Maximo 5 etiquetas</p>
               <FieldError errors={state.errors?.tags} />
             </div>
           </div>
 
-          {/* Información del organizador */}
+          {/* Informacion del organizador */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Información del Organizador</h3>
+            <h3 className="text-lg font-medium">Informacion del Organizador</h3>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="organizerName">Nombre del organizador *</Label>
-                <Input id="organizerName" name="organizerName" placeholder="Tu nombre o empresa" required />
+                <Input id="organizerName" name="organizerName" placeholder="Tu nombre o empresa" defaultValue={state.values?.organizerName} required />
                 <FieldError errors={state.errors?.organizerName} />
               </div>
 
@@ -295,6 +301,7 @@ export function EventForm(): React.ReactElement {
                   name="organizerEmail"
                   type="email"
                   placeholder="contacto@ejemplo.com"
+                  defaultValue={state.values?.organizerEmail}
                   required
                 />
                 <FieldError errors={state.errors?.organizerEmail} />

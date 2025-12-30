@@ -84,18 +84,17 @@ export const createPropertySchema = z.object({
 
   // Tipo y operación
   propertyType: z.enum(PROPERTY_TYPES, {
-    errorMap: () => ({ message: 'Selecciona un tipo de propiedad válido' }),
+    error: 'Selecciona un tipo de propiedad válido',
   }),
 
   operationType: z.enum(OPERATION_TYPES, {
-    errorMap: () => ({ message: 'Selecciona un tipo de operación válido' }),
+    error: 'Selecciona un tipo de operación válido',
   }),
 
   // Precio
   price: z
     .number({
-      required_error: 'El precio es requerido',
-      invalid_type_error: 'El precio debe ser un número',
+      error: 'El precio es requerido y debe ser un número',
     })
     .positive('El precio debe ser mayor a 0')
     .max(100_000_000, 'El precio parece demasiado alto'),

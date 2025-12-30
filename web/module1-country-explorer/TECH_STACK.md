@@ -2,41 +2,59 @@
 
 ## Versiones de Dependencias (Diciembre 2025)
 
-Este documento registra las versiones exactas de las dependencias utilizadas en este módulo, verificadas en diciembre de 2025.
+Este documento registra las versiones exactas de las dependencias utilizadas en este módulo, actualizadas en diciembre de 2025.
 
 ---
 
 ## Dependencias de Desarrollo
 
-| Paquete              | Versión  | Propósito                                      |
+| Paquete              | Version  | Proposito                                      |
 | -------------------- | -------- | ---------------------------------------------- |
-| typescript           | 5.7.2    | Lenguaje con tipado estático                   |
-| vite                 | 6.0.6    | Bundler y servidor de desarrollo               |
-| tailwindcss          | 3.4.17   | Framework CSS con clases utilitarias           |
-| postcss              | 8.5.1    | Procesador de CSS (requerido por Tailwind 4)   |
-| autoprefixer         | 10.4.20  | Añade prefijos de navegador automáticamente    |
+| typescript           | 5.9.3    | Lenguaje con tipado estatico                   |
+| vite                 | 7.3.0    | Bundler y servidor de desarrollo               |
+| tailwindcss          | 4.1.8    | Framework CSS utility-first (v4)               |
+| @tailwindcss/vite    | 4.1.8    | Plugin de Vite para Tailwind v4                |
 | eslint               | 9.17.0   | Linter para JavaScript/TypeScript              |
 | typescript-eslint    | 8.18.2   | Plugin de ESLint para TypeScript               |
-| prettier             | 3.4.2    | Formateador de código                          |
+| prettier             | 3.4.2    | Formateador de codigo                          |
 | @types/node          | 22.10.2  | Tipos de TypeScript para Node.js               |
 
 ---
 
 ## Notas sobre las versiones
 
-### TypeScript 5.7.2
-- **¿Por qué no 5.9?**: Usamos 5.7.2 que es la versión estable más reciente compatible con todas las herramientas del ecosistema Vite.
-- Características utilizadas: strict mode, discriminated unions, template literal types
+### Tailwind CSS 4.1.8
 
-### Vite 6.0.6
-- **¿Por qué no Vite 7?**: Vite 7 requiere Node.js 20.19+ y tiene cambios breaking. Usamos Vite 6 para máxima estabilidad.
-- El proyecto está preparado para migrar a Vite 7/8 cuando sea necesario.
+- **Nueva arquitectura**: Tailwind v4 utiliza un motor completamente nuevo escrito en Rust
+- **Configuración CSS-first**: Ya no requiere `tailwind.config.js` ni `postcss.config.js`
+- **Nuevo import**: `@import 'tailwindcss'` reemplaza las directivas `@tailwind`
+- **Utilidades personalizadas**: `@utility` reemplaza `@layer utilities`
+- **Performance**: Builds hasta 10x más rápidos que v3
 
-### Tailwind CSS 3.4.17
-- Versión estable más reciente de la rama 3.x (diciembre 2024)
-- Sintaxis tradicional con directivas `@tailwind base/components/utilities`
-- Amplia compatibilidad con navegadores y herramientas del ecosistema
-- **Nota**: Tailwind CSS 4.0 fue lanzado en enero 2025, pero usamos 3.4 por estabilidad
+### TypeScript 5.9.3
+
+- Version estable mas reciente de la rama 5.9.x
+- Caracteristicas utilizadas: strict mode, discriminated unions, template literal types
+
+### Vite 7.3.0
+
+- Bundler ultrarapido con HMR nativo
+- Integracion directa con `@tailwindcss/vite`
+- No requiere configuracion adicional de PostCSS
+
+---
+
+## Cambios vs Versión Anterior
+
+| Aspecto              | Antes (v3)           | Ahora (v4)            |
+| -------------------- | -------------------- | --------------------- |
+| Tailwind CSS         | 3.4.17               | 4.1.8                 |
+| PostCSS              | Requerido            | No necesario          |
+| Autoprefixer         | Requerido            | Incluido en Tailwind  |
+| tailwind.config.js   | Requerido            | Eliminado             |
+| postcss.config.js    | Requerido            | Eliminado             |
+| CSS Import           | `@tailwind base;`    | `@import 'tailwindcss'` |
+| Utilidades custom    | `@layer utilities`   | `@utility nombre`     |
 
 ---
 
@@ -59,7 +77,7 @@ Este documento registra las versiones exactas de las dependencias utilizadas en 
 
 ## Navegadores Soportados
 
-Debido al uso de Tailwind CSS 4 y características modernas de CSS:
+Tailwind CSS v4 requiere navegadores modernos con soporte para `@property` y `color-mix()`:
 
 | Navegador          | Versión Mínima |
 | ------------------ | -------------- |

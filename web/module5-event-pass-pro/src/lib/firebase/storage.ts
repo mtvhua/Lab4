@@ -28,7 +28,7 @@ function getStorageBucket() {
   const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
 
   if (!bucketName) {
-    console.warn('⚠️ Firebase Storage: Bucket no configurado');
+    console.warn('Firebase Storage: Bucket no configurado');
     return null;
   }
 
@@ -88,7 +88,7 @@ export async function uploadPosterToStorage(
     // Obtener URL pública
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
 
-    console.log(`📤 Poster subido: ${publicUrl}`);
+    console.log(`Poster subido: ${publicUrl}`);
     return publicUrl;
   } catch (error) {
     console.error('Error subiendo poster a Storage:', error);
@@ -149,7 +149,7 @@ export async function deletePosterFromStorage(eventId: string): Promise<boolean>
     }
 
     await file.delete();
-    console.log(`🗑️ Poster eliminado: ${filePath}`);
+    console.log(`Poster eliminado: ${filePath}`);
     return true;
   } catch (error) {
     console.error('Error eliminando poster de Storage:', error);

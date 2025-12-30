@@ -132,7 +132,7 @@ const initialEvents: Event[] = [
     id: generateId(),
     title: 'Hackathon IA para el Bien Social',
     description:
-      'Hackathon de 48 horas enfocado en crear soluciones de inteligencia artificial para problemas sociales. Premios de hasta 10.000€ para los mejores proyectos. Comida y bebida incluidas.',
+      'Hackathon de 48 horas enfocado en crear soluciones de inteligencia artificial para problemas sociales. Premios de hasta $10,000 para los mejores proyectos. Comida y bebida incluidas.',
     category: 'otro',
     status: 'borrador',
     date: '2025-03-22T09:00:00.000Z',

@@ -17,8 +17,9 @@
 // =============================================================================
 
 import type React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,15 +105,44 @@ export function PropertyForm({
       images: [],
       ...defaultValues,
     },
-    mode: 'onBlur',
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
   });
 
-  // Observamos valores para el Select (que no usa register directamente)
+  // Observamos valores para el Select y para el contador de caracteres
   const propertyType = watch('propertyType');
   const operationType = watch('operationType');
+  const descriptionValue = watch('description');
+
+  /**
+   * Maneja errores de validacion mostrando toasts.
+   * Se llama cuando el formulario no pasa la validacion de Zod.
+   */
+  const onValidationError = (fieldErrors: FieldErrors<CreatePropertyInput>): void => {
+    console.log('=== ERRORES DE VALIDACION ===', fieldErrors);
+
+    // Contamos los errores
+    const errorCount = Object.keys(fieldErrors).length;
+
+    // Construimos la descripcion con los errores
+    const errorMessages = Object.values(fieldErrors)
+      .map((error) => error?.message)
+      .filter((msg): msg is string => typeof msg === 'string')
+      .slice(0, 3);
+
+    const description = errorMessages.join('. ') + (errorCount > 3 ? '...' : '');
+
+    console.log('=== MOSTRANDO TOAST ===', { errorCount, description });
+
+    // Mostramos toast con resumen de errores
+    toast.error(`Hay ${errorCount} ${errorCount === 1 ? 'error' : 'errores'} en el formulario`, {
+      description,
+      duration: 5000,
+    });
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, onValidationError)} className="space-y-6">
       {/* Sección: Información Básica */}
       <Card>
         <CardHeader>
@@ -132,18 +162,23 @@ export function PropertyForm({
             )}
           </div>
 
-          {/* Descripción */}
+          {/* Descripcion */}
           <div className="space-y-2">
-            <Label htmlFor="description">Descripción *</Label>
+            <Label htmlFor="description">Descripcion *</Label>
             <Textarea
               id="description"
-              placeholder="Describe la propiedad en detalle..."
+              placeholder="Describe la propiedad en detalle (minimo 50 caracteres)..."
               rows={5}
               {...register('description')}
             />
-            {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
-            )}
+            <div className="flex justify-between items-center">
+              <span className={`text-sm ${(descriptionValue?.length ?? 0) < 50 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {descriptionValue?.length ?? 0}/50 caracteres minimos
+              </span>
+              {errors.description && (
+                <p className="text-sm text-destructive">{errors.description.message}</p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -6,6 +6,21 @@
 
 ---
 
+## Stack Tecnologico
+
+| Dependencia | Version |
+|-------------|---------|
+| Next.js | 16.1.1 |
+| React | 19.2.1 |
+| TypeScript | 5.9.3 |
+| Tailwind CSS | 4.1.8 |
+| Zod | 4.1.9 |
+| Lucide React | 0.469.0 |
+
+> Ver [TECH_STACK.md](./TECH_STACK.md) para detalles completos.
+
+---
+
 ## Descripción del Proyecto
 
 **EventPass** es una plataforma de gestión de eventos que demuestra las capacidades de Next.js 15 con App Router. Este proyecto enseña:
@@ -85,13 +100,13 @@ const [optimisticValue, addOptimistic] = useOptimistic(value, reducer);
 module4-event-pass/
 ├── package.json               # Dependencias y scripts
 ├── next.config.ts             # Configuración de Next.js
-├── tailwind.config.ts         # Configuración de Tailwind CSS
+├── postcss.config.mjs         # Configuración de PostCSS (Tailwind v4)
 ├── tsconfig.json              # Configuración de TypeScript
 ├── eslint.config.mjs          # Configuración de ESLint
-├── postcss.config.mjs         # Configuración de PostCSS
 ├── .gitignore                 # Archivos ignorados
 ├── .env.example               # Variables de entorno ejemplo
 ├── README.md                  # Esta documentación
+├── TECH_STACK.md              # Versiones de dependencias
 └── src/
     ├── app/                   # App Router (páginas y layouts)
     │   ├── layout.tsx         # Layout raíz

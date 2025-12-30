@@ -32,7 +32,7 @@
  * // El tipo se infiere como HTMLInputElement | null
  * const input = getElement<HTMLInputElement>('#searchInput');
  * if (input) {
- *   console.log(input.value); // ✅ TypeScript sabe que tiene .value
+ *   console.log(input.value); // TypeScript sabe que tiene .value
  * }
  */
 export function getElement<T extends HTMLElement>(selector: string): T | null {
@@ -125,7 +125,7 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(
  * ## innerHTML vs textContent vs replaceChildren
  * - innerHTML = '': Puede ser lento, parsea HTML
  * - textContent = '': No remueve event listeners correctamente
- * - replaceChildren(): Método moderno, limpio y eficiente ✅
+ * - replaceChildren(): Metodo moderno, limpio y eficiente (recomendado)
  *
  * @param element - Elemento a limpiar
  */

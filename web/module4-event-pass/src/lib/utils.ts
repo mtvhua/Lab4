@@ -62,13 +62,13 @@ export function formatShortDate(dateString: string): string {
 }
 
 /**
- * Formatea un precio en euros.
+ * Formatea un precio en dolares.
  */
 export function formatPrice(price: number): string {
   if (price === 0) return 'Gratis';
-  return new Intl.NumberFormat('es-ES', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'EUR',
+    currency: 'USD',
   }).format(price);
 }
 

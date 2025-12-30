@@ -4,15 +4,32 @@ Bienvenido al track de Web del curso **Aplicaciones Web Avanzadas**. Aquí apren
 
 ## Tecnologías Principales
 
-*   **Lenguaje**: TypeScript
-*   **Frontend**: React 19, Next.js 15
+*   **Lenguaje**: TypeScript 5.7.3
+*   **Frontend**: React 19, Next.js 15.1, Vite 6.3
 *   **Backend**: Node.js, Express, Prisma ORM
-*   **UI/Styling**: HTML5, Tailwind CSS, Shadcn UI
-*   **Forms**: Zod, React Hook Form
+*   **UI/Styling**: HTML5, Tailwind CSS 4.1, Shadcn UI
+*   **Forms**: Zod 3.24, React Hook Form
 *   **Base de Datos**: SQLite (local), Firebase Firestore (nube)
 *   **Autenticación**: Firebase Auth
 *   **IA Generativa**: Google Gemini
 *   **Deploy**: Vercel, Google Cloud Run
+
+> **Actualizado Diciembre 2025**: Tailwind CSS v4 con configuración CSS-first
+
+## Versiones por Módulo
+
+| Dependencia | M1 | M2 | M3 | M4 | M5 |
+|-------------|----|----|----|----|-----|
+| TypeScript | 5.7.3 | 5.7.3 | 5.7.2 | 5.7.3 | 5.7.3 |
+| Tailwind CSS | 4.1.8 | 4.1.8 | - | 4.1.8 | 4.1.8 |
+| Vite | 6.3.5 | 6.3.5 | - | - | - |
+| Next.js | - | - | - | 15.1.3 | 15.1.3 |
+| React | - | 19.0.0 | - | 19.0.0 | 19.0.0 |
+| Express | - | - | 4.21.2 | - | - |
+| Prisma | - | - | 6.1.0 | - | - |
+| Zod | - | 3.24.1 | 3.24.1 | 3.24.1 | 3.24.1 |
+| Firebase | - | - | - | - | 11.1.0 |
+| Gemini AI | - | - | - | - | 0.21.0 |
 
 ## Módulos del Curso
 
@@ -104,9 +121,9 @@ Cada módulo es un proyecto npm independiente. Para ejecutarlos:
 
 | Módulo | Puerto | URL |
 |--------|--------|-----|
-| Module 1 - Country Explorer | 5173 | http://localhost:5173 |
-| Module 2 - Real Estate React | 5173 | http://localhost:5173 |
-| Module 3 - EstateHub API | 3000 | http://localhost:3000 |
+| Module 1 - Country Explorer | 3000 | http://localhost:3000 |
+| Module 2 - Real Estate React | 3001 | http://localhost:3001 |
+| Module 3 - EstateHub API | 3002 | http://localhost:3002 |
 | Module 4 - EventPass | 3000 | http://localhost:3000 |
 | Module 5 - EventPass Pro | 3000 | http://localhost:3000 |
 

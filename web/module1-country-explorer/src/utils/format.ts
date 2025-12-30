@@ -150,7 +150,7 @@ export function formatTimezones(timezones: string[]): string {
  * @returns Texto en español
  */
 export function formatDrivingSide(side: 'left' | 'right'): string {
-  return side === 'left' ? 'Izquierda (🇬🇧)' : 'Derecha';
+  return side === 'left' ? 'Izquierda (UK)' : 'Derecha';
 }
 
 /**

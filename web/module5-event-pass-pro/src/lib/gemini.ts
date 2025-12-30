@@ -5,7 +5,7 @@
 //
 // ## Gemini AI
 // Gemini es el modelo de IA de Google, similar a GPT.
-// Usamos el SDK oficial @google/generative-ai.
+// Usamos el SDK oficial @google/genai (Google GenAI SDK).
 //
 // ## Casos de uso en EventPass
 // 1. Generar descripciones atractivas de eventos
@@ -13,7 +13,7 @@
 // 3. Mejorar textos existentes
 // =============================================================================
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { uploadPosterToStorage, getPosterFromStorage } from './firebase/storage';
 
 // =============================================================================
@@ -24,14 +24,13 @@ import { uploadPosterToStorage, getPosterFromStorage } from './firebase/storage'
  * Modelos de Gemini disponibles.
  *
  * ## Modelos de texto
- * - gemini-1.5-flash: Rápido y económico para texto
- * - gemini-1.5-pro: Más capaz pero más lento
+ * - gemini-3-flash-preview: Modelo de texto rapido
  *
  * ## Modelos de imagen
- * - gemini-2.0-flash-preview-image-generation: Genera imágenes (experimental)
+ * - gemini-3-pro-image-preview: Genera imagenes nativas
  */
-const TEXT_MODEL = 'gemini-1.5-flash';
-const IMAGE_MODEL = 'gemini-2.0-flash-preview-image-generation';
+const TEXT_MODEL = 'gemini-3-flash-preview';
+const IMAGE_MODEL = 'gemini-3-pro-image-preview';
 
 /**
  * Inicializa el cliente de Gemini.
@@ -40,15 +39,15 @@ const IMAGE_MODEL = 'gemini-2.0-flash-preview-image-generation';
  * La API key se obtiene desde Google AI Studio:
  * https://aistudio.google.com/apikey
  */
-function getGeminiClient(): GoogleGenerativeAI | null {
+function getGeminiClient(): GoogleGenAI | null {
   const apiKey = process.env.GOOGLE_AI_API_KEY;
 
   if (!apiKey) {
-    console.warn('⚠️ Gemini AI: API key no configurada.');
+    console.warn('Gemini AI: API key no configurada.');
     return null;
   }
 
-  return new GoogleGenerativeAI(apiKey);
+  return new GoogleGenAI({ apiKey });
 }
 
 /**
@@ -171,7 +170,6 @@ export async function generateEventDescription(
   }
 
   const safeInput = validation.sanitized;
-  const model = client.getGenerativeModel({ model: TEXT_MODEL });
 
   const prompt = `Genera una descripción atractiva y profesional para un evento con las siguientes características:
 
@@ -192,11 +190,12 @@ Requisitos:
 Devuelve SOLO la descripción, sin títulos ni formateo adicional.`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const response = await client.models.generateContent({
+      model: TEXT_MODEL,
+      contents: prompt,
+    });
 
-    return text.trim();
+    return response.text?.trim() ?? null;
   } catch (error) {
     console.error('Error generando descripción con Gemini:', error);
     return null;
@@ -224,8 +223,6 @@ export async function generateEventTags(
   const safeTitle = sanitizeInput(title);
   const safeDescription = sanitizeInput(description);
 
-  const model = client.getGenerativeModel({ model: TEXT_MODEL });
-
   const prompt = `Analiza el siguiente evento y sugiere 5 etiquetas relevantes:
 
 Título: ${safeTitle}
@@ -241,9 +238,11 @@ Requisitos:
 Ejemplo de formato: tecnología, conferencia, desarrollo_web, networking, madrid`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const response = await client.models.generateContent({
+      model: TEXT_MODEL,
+      contents: prompt,
+    });
+    const text = response.text ?? '';
 
     // Parseamos las etiquetas
     const tags = text
@@ -275,8 +274,6 @@ export async function improveDescription(description: string): Promise<string | 
   // Sanitizar input para prevenir prompt injection
   const safeDescription = sanitizeInput(description);
 
-  const model = client.getGenerativeModel({ model: TEXT_MODEL });
-
   const prompt = `Mejora la siguiente descripción de evento haciéndola más atractiva y profesional:
 
 Descripción original:
@@ -291,9 +288,11 @@ Requisitos:
 - Devuelve SOLO la descripción mejorada, sin explicaciones`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    return response.text().trim();
+    const response = await client.models.generateContent({
+      model: TEXT_MODEL,
+      contents: prompt,
+    });
+    return response.text?.trim() ?? null;
   } catch (error) {
     console.error('Error mejorando descripción con Gemini:', error);
     return null;
@@ -336,7 +335,7 @@ export async function generateEventPoster(
   // 1. Verificar si ya existe en cache (Firebase Storage)
   const cachedUrl = await getPosterFromStorage(input.eventId);
   if (cachedUrl) {
-    console.log(`📦 Poster encontrado en cache: ${input.eventId}`);
+    console.log(`Poster encontrado en cache: ${input.eventId}`);
     return cachedUrl;
   }
 
@@ -350,13 +349,6 @@ export async function generateEventPoster(
   const safeTitle = sanitizeInput(input.title);
   const safeCategory = sanitizeInput(input.category);
   const safeLocation = sanitizeInput(input.location);
-
-  const model = client.getGenerativeModel({
-    model: IMAGE_MODEL,
-    generationConfig: {
-      responseModalities: ['Text', 'Image'],
-    },
-  });
 
   const prompt = `Create a professional and visually striking event poster with these details:
 
@@ -374,16 +366,25 @@ Requirements:
 - High quality, eye-catching composition`;
 
   try {
-    console.log(`🎨 Generando poster para evento: ${input.eventId}`);
-    const result = await model.generateContent(prompt);
-    const response = result.response;
+    console.log(`Generando poster para evento: ${input.eventId}`);
+    const response = await client.models.generateContent({
+      model: IMAGE_MODEL,
+      contents: prompt,
+      config: {
+        responseModalities: ['TEXT', 'IMAGE'],
+        imageConfig: {
+          aspectRatio: '3:4',
+        },
+      },
+    });
 
     // Buscar la imagen en la respuesta
-    const imagePart = response.candidates?.[0]?.content?.parts?.find(
-      (part: { inlineData?: { mimeType: string; data: string } }) => part.inlineData?.mimeType?.startsWith('image/')
+    const parts = response.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = parts.find(
+      (part) => part.inlineData?.mimeType?.startsWith('image/')
     );
 
-    if (!imagePart?.inlineData) {
+    if (!imagePart?.inlineData?.data || !imagePart?.inlineData?.mimeType) {
       console.error('No se encontró imagen en la respuesta de Gemini');
       return null;
     }
@@ -398,7 +399,7 @@ Requirements:
       mimeType
     );
 
-    console.log(`✅ Poster generado y cacheado: ${publicUrl}`);
+    console.log(`Poster generado y cacheado: ${publicUrl}`);
     return publicUrl;
   } catch (error) {
     console.error('Error generando poster con Gemini:', error);

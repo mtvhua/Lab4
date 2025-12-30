@@ -1,23 +1,16 @@
 /* =============================================================================
  * ESTILOS PRINCIPALES - Module 1: Country Explorer
  * =============================================================================
- * En Tailwind CSS 3.x, usamos directivas @tailwind para cargar los estilos.
- * Estas directivas son reemplazadas por CSS real durante el build.
+ * En Tailwind CSS 4.x, usamos @import para cargar el framework.
+ * La configuración ahora se hace directamente en CSS con @theme.
  *
- * ## Capas de Tailwind CSS
- * - base: Estilos de reset y elementos HTML básicos
- * - components: Clases para componentes reutilizables
- * - utilities: Clases utilitarias (flex, pt-4, text-center, etc.)
+ * ## Cambios en Tailwind v4
+ * - @tailwind base/components/utilities → @import "tailwindcss"
+ * - @layer components con @apply sigue funcionando
+ * - @layer utilities → @utility para utilidades personalizadas
  * ============================================================================= */
 
-/* Capa base: incluye normalize.css y estilos de elementos HTML */
-@tailwind base;
-
-/* Capa de componentes: aquí se definen clases reutilizables con @apply */
-@tailwind components;
-
-/* Capa de utilidades: todas las clases utilitarias de Tailwind */
-@tailwind utilities;
+@import 'tailwindcss';
 
 /* =============================================================================
  * CAPA BASE - Estilos globales
@@ -65,7 +58,7 @@
   /* Botón de acción primario */
   .btn-primary {
     @apply px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors;
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900;
+    @apply focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900;
   }
 
   /* Badge para etiquetas informativas */
@@ -75,19 +68,21 @@
 }
 
 /* =============================================================================
- * CAPA DE UTILIDADES
+ * UTILIDADES PERSONALIZADAS
  * =============================================================================
- * Clases utilitarias personalizadas que extienden las de Tailwind.
- * Tienen la misma especificidad que las utilidades de Tailwind.
+ * En Tailwind v4, las utilidades personalizadas se definen con @utility.
+ * Cada @utility crea una clase que puede usar variantes (hover:, md:, etc.)
  * ============================================================================= */
-@layer utilities {
-  /* Animación de pulso lento para estados de carga */
-  .animate-pulse-slow {
-    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
 
-  /* Efecto de gradiente de texto */
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400;
-  }
+/* Animación de pulso lento para estados de carga */
+@utility animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Efecto de gradiente de texto */
+@utility text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, var(--color-blue-400), var(--color-cyan-400));
 }

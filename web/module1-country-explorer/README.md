@@ -6,6 +6,21 @@
 
 ---
 
+## Stack Tecnologico
+
+| Dependencia | Version |
+|-------------|---------|
+| TypeScript | 5.9.3 |
+| Vite | 7.3.0 |
+| Tailwind CSS | 4.1.8 |
+| @tailwindcss/vite | 4.1.8 |
+| ESLint | 9.17.0 |
+| Prettier | 3.4.2 |
+
+> Ver [TECH_STACK.md](./TECH_STACK.md) para detalles completos.
+
+---
+
 ## Descripción del Proyecto
 
 **Country Explorer** es una aplicación web educativa que permite buscar y explorar información detallada de cualquier país del mundo. El proyecto está diseñado para enseñar los fundamentos del desarrollo web moderno **sin utilizar frameworks** como React o Vue, enfocándose en:
@@ -19,23 +34,23 @@
 ## Capturas de Pantalla
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         🌍 Explorador de Países                              │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │  🔍 Buscar país (ej: España, México, Argentina...)         [Buscar]  │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                       │
-│  │   🇪🇸 España  │  │   🇲🇽 México  │  │  🇦🇷 Argentina│                       │
-│  │              │  │              │  │              │                       │
-│  │  Capital:    │  │  Capital:    │  │  Capital:    │                       │
-│  │  Madrid      │  │  México D.F. │  │  Buenos Aires│                       │
-│  │              │  │              │  │              │                       │
-│  │  Población:  │  │  Población:  │  │  Población:  │                       │
-│  │  47.3M       │  │  128.9M      │  │  45.3M       │                       │
-│  └──────────────┘  └──────────────┘  └──────────────┘                       │
-└─────────────────────────────────────────────────────────────────────────────┘
++-----------------------------------------------------------------------------+
+|                          Explorador de Paises                                |
+|                                                                              |
+|  +---------------------------------------------------------------------+    |
+|  |  Buscar pais (ej: Espana, Mexico, Argentina...)            [Buscar]  |    |
+|  +---------------------------------------------------------------------+    |
+|                                                                              |
+|  +--------------+  +--------------+  +--------------+                       |
+|  |    Espana    |  |    Mexico    |  |   Argentina  |                       |
+|  |              |  |              |  |              |                       |
+|  |  Capital:    |  |  Capital:    |  |  Capital:    |                       |
+|  |  Madrid      |  |  Mexico D.F. |  |  Buenos Aires|                       |
+|  |              |  |              |  |              |                       |
+|  |  Poblacion:  |  |  Poblacion:  |  |  Poblacion:  |                       |
+|  |  47.3M       |  |  128.9M      |  |  45.3M       |                       |
+|  +--------------+  +--------------+  +--------------+                       |
++-----------------------------------------------------------------------------+
 ```
 
 ---
@@ -106,9 +121,8 @@ module1-country-explorer/
 ├── index.html                 # Punto de entrada HTML
 ├── package.json               # Dependencias y scripts
 ├── tsconfig.json              # Configuración TypeScript estricta
-├── vite.config.ts             # Configuración de Vite
+├── vite.config.ts             # Configuración de Vite + Tailwind v4
 ├── eslint.config.js           # Reglas de linting
-├── postcss.config.js          # Procesamiento CSS
 ├── .prettierrc                # Formato de código
 ├── .gitignore                 # Archivos ignorados
 ├── README.md                  # Esta documentación
@@ -116,7 +130,7 @@ module1-country-explorer/
 └── src/
     ├── main.ts                # Punto de entrada TypeScript
     ├── styles/
-    │   └── main.css           # Estilos con Tailwind
+    │   └── main.css           # Estilos con Tailwind v4
     ├── types/
     │   └── country.ts         # Definiciones de tipos
     ├── services/

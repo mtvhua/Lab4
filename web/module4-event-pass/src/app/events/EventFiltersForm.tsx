@@ -82,7 +82,7 @@ export function EventFiltersForm({ currentFilters }: EventFiltersFormProps): Rea
             ))}
           </select>
 
-          {/* Precio máximo - usando select nativo estilizado */}
+          {/* Precio maximo - usando select nativo estilizado */}
           <select
             name="priceMax"
             defaultValue={currentFilters.priceMax?.toString() ?? ''}
@@ -90,10 +90,10 @@ export function EventFiltersForm({ currentFilters }: EventFiltersFormProps): Rea
           >
             <option value="">Cualquier precio</option>
             <option value="0">Gratis</option>
-            <option value="25">Hasta 25€</option>
-            <option value="50">Hasta 50€</option>
-            <option value="100">Hasta 100€</option>
-            <option value="200">Hasta 200€</option>
+            <option value="25">Hasta $25</option>
+            <option value="50">Hasta $50</option>
+            <option value="100">Hasta $100</option>
+            <option value="200">Hasta $200</option>
           </select>
 
           {/* Botón aplicar filtros (opcional, ya que submit también los aplica) */}

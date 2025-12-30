@@ -171,29 +171,28 @@ function createModalContent(country: Country): string {
           <p class="text-white font-medium">${country.name.official}</p>
         </div>
 
-        <!-- Grid de información -->
+        <!-- Grid de informacion -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          ${createInfoItem('🏛️ Capital', formatCapitals(country.capital))}
-          ${createInfoItem('🌍 Región', `${country.region}${country.subregion ? ` / ${country.subregion}` : ''}`)}
-          ${createInfoItem('👥 Población', formatPopulation(country.population))}
-          ${createInfoItem('📐 Área', formatArea(country.area))}
-          ${createInfoItem('🗣️ Idiomas', formatLanguages(country.languages))}
-          ${createInfoItem('💰 Monedas', formatCurrencies(country.currencies))}
-          ${createInfoItem('🕐 Zona horaria', formatTimezones(country.timezones))}
-          ${createInfoItem('🌏 Continente', country.continents.join(', '))}
-          ${createInfoItem('🚗 Lado de conducción', formatDrivingSide(country.car.side))}
-          ${createInfoItem('🏝️ Sin litoral', formatLandlocked(country.landlocked))}
-          ${demonym ? createInfoItem('🧑 Gentilicio', demonym) : ''}
+          ${createInfoItem('Capital', formatCapitals(country.capital))}
+          ${createInfoItem('Region', `${country.region}${country.subregion ? ` / ${country.subregion}` : ''}`)}
+          ${createInfoItem('Poblacion', formatPopulation(country.population))}
+          ${createInfoItem('Area', formatArea(country.area))}
+          ${createInfoItem('Idiomas', formatLanguages(country.languages))}
+          ${createInfoItem('Monedas', formatCurrencies(country.currencies))}
+          ${createInfoItem('Zona horaria', formatTimezones(country.timezones))}
+          ${createInfoItem('Continente', country.continents.join(', '))}
+          ${createInfoItem('Lado de conduccion', formatDrivingSide(country.car.side))}
+          ${createInfoItem('Sin litoral', formatLandlocked(country.landlocked))}
+          ${demonym ? createInfoItem('Gentilicio', demonym) : ''}
         </div>
 
-        <!-- Países fronterizos -->
+        <!-- Paises fronterizos -->
         ${
           country.borders && country.borders.length > 0
             ? `
           <div class="space-y-3">
             <h3 class="text-lg font-semibold text-white flex items-center gap-2">
-              <span>🗺️</span>
-              Países Fronterizos
+              Paises Fronterizos
             </h3>
             <div class="flex flex-wrap gap-2">
               ${country.borders.map((code) => `<span class="info-badge">${code}</span>`).join('')}

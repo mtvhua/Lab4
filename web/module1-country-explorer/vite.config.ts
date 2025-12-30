@@ -8,8 +8,12 @@
 // =============================================================================
 
 import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+  // Plugins de Vite
+  plugins: [tailwindcss()],
+
   // Directorio raíz del código fuente
   root: '.',
 

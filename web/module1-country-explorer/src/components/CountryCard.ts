@@ -86,20 +86,20 @@ export function createCountryCard(
           : ''
       }
 
-      <!-- Información básica -->
+      <!-- Informacion basica -->
       <div class="space-y-2 text-sm">
         <div class="flex items-center gap-2 text-slate-300">
-          <span class="text-slate-500">🏛️ Capital:</span>
+          <span class="text-slate-500">Capital:</span>
           <span class="truncate">${formatCapitals(country.capital)}</span>
         </div>
 
         <div class="flex items-center gap-2 text-slate-300">
-          <span class="text-slate-500">👥 Población:</span>
+          <span class="text-slate-500">Poblacion:</span>
           <span>${formatNumber(country.population)}</span>
         </div>
 
         <div class="flex items-center gap-2 text-slate-300">
-          <span class="text-slate-500">🌍 Subregión:</span>
+          <span class="text-slate-500">Subregion:</span>
           <span class="truncate">${country.subregion ?? country.region}</span>
         </div>
       </div>

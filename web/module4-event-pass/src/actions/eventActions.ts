@@ -46,7 +46,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createEventSchema, type FormState, type CreateEventInput } from '@/types/event';
+import { createEventSchema, type FormState, type CreateEventInput, type FormValues } from '@/types/event';
 import {
   createEvent as createEventInDb,
   updateEvent as updateEventInDb,
@@ -75,22 +75,40 @@ export async function createEventAction(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  // Extraemos los datos del FormData
-  const rawData = {
+  // Extraemos valores crudos para preservar en caso de error
+  const formValues: FormValues = {
     title: formData.get('title') as string,
     description: formData.get('description') as string,
     category: formData.get('category') as string,
     status: formData.get('status') as string,
     date: formData.get('date') as string,
-    endDate: (formData.get('endDate') as string) || undefined,
+    endDate: formData.get('endDate') as string,
     location: formData.get('location') as string,
     address: formData.get('address') as string,
-    capacity: Number(formData.get('capacity')),
-    price: Number(formData.get('price')),
-    imageUrl: (formData.get('imageUrl') as string) || undefined,
+    capacity: formData.get('capacity') as string,
+    price: formData.get('price') as string,
+    imageUrl: formData.get('imageUrl') as string,
     organizerName: formData.get('organizerName') as string,
     organizerEmail: formData.get('organizerEmail') as string,
-    tags: (formData.get('tags') as string)
+    tags: formData.get('tags') as string,
+  };
+
+  // Transformamos a los tipos correctos para validacion
+  const rawData = {
+    title: formValues.title,
+    description: formValues.description,
+    category: formValues.category,
+    status: formValues.status,
+    date: formValues.date,
+    endDate: formValues.endDate || undefined,
+    location: formValues.location,
+    address: formValues.address,
+    capacity: Number(formValues.capacity),
+    price: Number(formValues.price),
+    imageUrl: formValues.imageUrl || undefined,
+    organizerName: formValues.organizerName,
+    organizerEmail: formValues.organizerEmail,
+    tags: (formValues.tags || '')
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean),
@@ -114,6 +132,7 @@ export async function createEventAction(
       success: false,
       message: 'Por favor, corrige los errores en el formulario',
       errors,
+      values: formValues, // Preservamos los valores para el formulario
     };
   }
 

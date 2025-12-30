@@ -13,6 +13,7 @@
 
 import type React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { Home, Building2 } from 'lucide-react';
 import { HomePage } from '@/pages/HomePage';
 import { NewPropertyPage } from '@/pages/NewPropertyPage';
@@ -28,7 +29,11 @@ import { PropertyDetailPage } from '@/pages/PropertyDetailPage';
  */
 function App(): React.ReactElement {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <>
+      {/* Toaster para notificaciones - fuera del layout para evitar problemas de z-index */}
+      <Toaster position="top-right" richColors closeButton />
+
+      <div className="min-h-screen flex flex-col bg-background">
       {/* ===================================================================
           HEADER / NAVEGACIÓN
           =================================================================== */}
@@ -102,7 +107,8 @@ function App(): React.ReactElement {
           </p>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }
 

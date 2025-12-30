@@ -623,6 +623,236 @@ Consistent response structure.
 ---
 
 <!-- _class: lead -->
+# Full-Stack Architecture
+## Frontend + Backend Separation
+
+---
+
+## Why Separate Frontend & Backend?
+
+**Separation of Concerns:**
+
+| Layer | Responsibility | Technology |
+|-------|---------------|------------|
+| Frontend | User interface, UX | React, Vue, Angular |
+| Backend | Business logic, data | Express, Prisma |
+| Database | Data persistence | SQLite, PostgreSQL |
+
+**Benefits:**
+- Independent development and deployment
+- Different teams can work in parallel
+- Technology flexibility (swap frontend without touching backend)
+- Better scalability and caching
+
+---
+
+## Communication Between Layers
+
+```text
++-----------------------+          +-----------------------+
+|       FRONTEND        |          |        BACKEND        |
+|    (React + Vite)     |          |   (Express + Prisma)  |
+|    localhost:3001     |          |    localhost:3002     |
++-----------+-----------+          +-----------+-----------+
+            |                                  |
+            |  1. HTTP Request                 |
+            |  GET /api/properties             |
+            |--------------------------------->|
+            |                                  |
+            |                           2. Query DB
+            |                                  |
+            |  3. HTTP Response                |
+            |  { data: [...] }                 |
+            |<---------------------------------|
+            |                                  |
++-----------+-----------+          +-----------+-----------+
+|   Update React State  |          |    Process Next Req   |
++-----------------------+          +-----------------------+
+```
+
+---
+
+## Port Configuration
+
+Each layer runs on a different port:
+
+```bash
+# Backend (Express)
+PORT=3002
+npm run dev  # http://localhost:3002
+
+# Frontend (Vite)
+PORT=3001
+npm run dev  # http://localhost:3001
+```
+
+**Why different ports?**
+- Avoid conflicts
+- Simulate production environment
+- Enable CORS configuration
+- Clear separation during development
+
+---
+
+## CORS: Cross-Origin Resource Sharing
+
+Frontend (port 3001) needs permission to call backend (port 3002).
+
+```typescript
+// backend/src/server.ts
+import cors from 'cors';
+
+app.use(cors({
+  origin: 'http://localhost:3001',  // Allow frontend
+  credentials: true
+}));
+```
+
+**Without CORS:** Browser blocks requests between different origins.
+
+---
+
+## Frontend API Layer
+
+The frontend creates an abstraction for API calls:
+
+```typescript
+// frontend/src/lib/api.ts
+const API_BASE_URL = 'http://localhost:3002/api';
+
+export async function getAllProperties(): Promise<Property[]> {
+  const response = await fetch(`${API_BASE_URL}/properties`);
+  const result = await response.json();
+  return result.data;
+}
+
+export async function createProperty(data: CreatePropertyInput): Promise<Property | null> {
+  const response = await fetch(`${API_BASE_URL}/properties`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const result = await response.json();
+  return result.success ? result.data : null;
+}
+```
+
+---
+
+## From localStorage to API
+
+**Module 2 (localStorage - sync):**
+```typescript
+export function getAllProperties(): Property[] {
+  const data = localStorage.getItem('properties');
+  return data ? JSON.parse(data) : [];
+}
+```
+
+**Module 3 (API - async):**
+```typescript
+export async function getAllProperties(): Promise<Property[]> {
+  const response = await fetch(`${API_BASE_URL}/properties`);
+  const result = await response.json();
+  return result.data;
+}
+```
+
+**Key difference:** All operations become async (Promises).
+
+---
+
+## Handling Async in React Components
+
+```typescript
+// BEFORE (sync)
+const loadProperties = useCallback(() => {
+  const properties = filterProperties(filters);
+  setProperties(properties);
+}, [filters]);
+
+// AFTER (async)
+const loadProperties = useCallback(async () => {
+  setIsLoading(true);
+  try {
+    const properties = await filterProperties(filters);
+    setProperties(properties);
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    setIsLoading(false);
+  }
+}, [filters]);
+```
+
+**Must add:** Loading states, error handling, try/catch.
+
+---
+
+## Loading States for UX
+
+```tsx
+function HomePage() {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ... load data
+
+  return (
+    <div>
+      {isLoading ? (
+        <p>Loading properties...</p>
+      ) : properties.length > 0 ? (
+        <PropertyList properties={properties} />
+      ) : (
+        <p>No properties found</p>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+## Error Handling
+
+```typescript
+// API layer handles errors gracefully
+export async function createProperty(data) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/properties`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+    return result.success ? result.data : null;
+  } catch (error) {
+    console.error('Network error:', error);
+    return null;  // Return null, not throw
+  }
+}
+```
+
+---
+
+## Summary: Layer Separation
+
+| Aspect | Frontend | Backend |
+|--------|----------|---------|
+| **Port** | 3001 | 3002 |
+| **Framework** | React + Vite | Express |
+| **Data Access** | fetch() API | Prisma ORM |
+| **State** | useState/useEffect | Database |
+| **Validation** | Zod (UI) | Zod (API) |
+| **Async** | Yes (fetch) | Yes (Prisma) |
+
+**The API is the contract between frontend and backend.**
+
+---
+
+<!-- _class: lead -->
 # 5. Deep Dive
 
 ---
@@ -679,13 +909,13 @@ SQLite stores the entire database in a single file.
 Handle async errors properly.
 
 ```typescript
-// ❌ Wrong: Unhandled promise rejection
+// BAD: Unhandled promise rejection
 app.get('/api/properties', async (req, res) => {
     const properties = await prisma.property.findMany(); // May throw!
     res.json(properties);
 });
 
-// ✅ Correct: Try-catch wrapper
+// GOOD: Try-catch wrapper
 app.get('/api/properties', async (req, res, next) => {
     try {
         const properties = await prisma.property.findMany();
@@ -695,7 +925,7 @@ app.get('/api/properties', async (req, res, next) => {
     }
 });
 
-// ✅ Better: Use express-async-errors package
+// BETTER: Use express-async-errors package
 import 'express-async-errors';
 // Now async errors are caught automatically
 ```

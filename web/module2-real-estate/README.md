@@ -6,6 +6,23 @@
 
 ---
 
+## Stack Tecnologico
+
+| Dependencia | Version |
+|-------------|---------|
+| React | 19.2.1 |
+| React Router DOM | 7.1.1 |
+| TypeScript | 5.9.3 |
+| Vite | 7.3.0 |
+| Tailwind CSS | 4.1.8 |
+| Zod | 4.1.9 |
+| React Hook Form | 7.54.2 |
+| Lucide React | 0.469.0 |
+
+> Ver [TECH_STACK.md](./TECH_STACK.md) para detalles completos.
+
+---
+
 ## Descripción del Proyecto
 
 **Real Estate React** es una aplicación web de bienes raíces que permite listar, buscar y gestionar propiedades inmobiliarias. El proyecto enseña conceptos fundamentales de desarrollo frontend moderno con React 19:
@@ -103,13 +120,12 @@ module2-real-estate/
 ├── index.html                 # Punto de entrada HTML
 ├── package.json               # Dependencias
 ├── tsconfig.json              # Configuración TypeScript
-├── vite.config.ts             # Configuración Vite
-├── tailwind.config.js         # Configuración Tailwind + Shadcn
-├── postcss.config.js          # Configuración PostCSS
+├── vite.config.ts             # Configuración Vite + Tailwind v4
 ├── eslint.config.js           # Reglas de linting
 ├── .prettierrc                # Formato de código
 ├── .gitignore                 # Archivos ignorados
 ├── README.md                  # Esta documentación
+├── TECH_STACK.md              # Versiones de dependencias
 └── src/
     ├── main.tsx               # Punto de entrada React
     ├── App.tsx                # Componente raíz con routing
@@ -210,15 +226,21 @@ module2-real-estate/
 - Node.js 20.19+ o 22.12+
 - npm 10+
 
-### Instalación
+### Instalacion
 
 ```bash
-# Navegar al directorio del módulo
+# Navegar al directorio del modulo
 cd web/module2-real-estate
 
 # Instalar dependencias
-npm install
+npm install --legacy-peer-deps
 ```
+
+> **Nota sobre --legacy-peer-deps**: Este flag es necesario porque algunas dependencias
+> (como @tailwindcss/vite y typescript-eslint) aun no declaran soporte para las versiones
+> mas recientes de Vite 7 y TypeScript 5.9. El flag permite instalar las dependencias
+> ignorando conflictos de peer dependencies. En la practica, las dependencias funcionan
+> correctamente con estas versiones.
 
 ### Comandos Disponibles
 

@@ -1,82 +1,8 @@
-# Módulo 3 - RealEstate Hub API
+# Modulo 3 - RealEstate Hub API
 
-## Backend API con Node.js, Express y Prisma
+## Full-Stack: Backend API + Frontend React
 
-> API REST para el portal inmobiliario usando Express, Prisma ORM y SQLite.
-
----
-
-## Descripción del Proyecto
-
-**RealEstate Hub API** es el backend que sirve los datos para el portal inmobiliario del Módulo 2. Este proyecto enseña:
-
-1. **Node.js y Express** - Creación de servidores HTTP y APIs REST
-2. **Prisma ORM** - Modelado de datos type-safe similar a Room en Android
-3. **Controladores y Middlewares** - Separación de responsabilidades
-4. **Validación con Zod** - Esquemas compartidos entre frontend y backend
-
----
-
-## Contexto Pedagógico
-
-### 1. Node.js y Express Básicos
-
-```typescript
-// Creación del servidor Express
-import express from 'express';
-
-const app = express();
-
-// Middleware para parsear JSON
-app.use(express.json());
-
-// Definición de rutas
-app.get('/api/properties', (req, res) => {
-  // Lógica del endpoint
-});
-
-app.listen(3002, () => {
-  console.log('Servidor corriendo en puerto 3002');
-});
-```
-
-### 2. Prisma ORM (Paridad con Room/DAO)
-
-```prisma
-// schema.prisma - Similar a Entity en Room
-model Property {
-  id          String   @id @default(cuid())
-  title       String
-  price       Float
-  createdAt   DateTime @default(now())
-
-  @@map("properties")  // Nombre de tabla
-}
-```
-
-```typescript
-// Uso del cliente Prisma - Similar a DAO
-const properties = await prisma.property.findMany({
-  where: { city: 'Madrid' },
-  orderBy: { createdAt: 'desc' }
-});
-```
-
-### 3. Controladores y Middlewares
-
-```typescript
-// Middleware - Se ejecuta antes de los controladores
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next(); // Pasa al siguiente middleware/controlador
-});
-
-// Controlador - Contiene la lógica de negocio
-export async function getAllProperties(req, res) {
-  const properties = await prisma.property.findMany();
-  res.json({ success: true, data: properties });
-}
-```
+> Proyecto completo con backend Express/Prisma y frontend React que lo consume.
 
 ---
 
@@ -84,28 +10,92 @@ export async function getAllProperties(req, res) {
 
 ```
 module3-realestate-hub-api/
-├── package.json               # Dependencias y scripts
-├── tsconfig.json              # Configuración TypeScript
-├── eslint.config.js           # Reglas de linting
-├── .prettierrc                # Formato de código
-├── .gitignore                 # Archivos ignorados
-├── API_CONTRACT.md            # Documentación de endpoints
-├── README.md                  # Esta documentación
-├── prisma/
-│   ├── schema.prisma          # Esquema de base de datos
-│   ├── seed.ts                # Datos de ejemplo
-│   └── dev.db                 # Base de datos SQLite (generada)
-└── src/
-    ├── server.ts              # Punto de entrada
-    ├── types/
-    │   └── property.ts        # Tipos compartidos con Module 2
-    ├── controllers/
-    │   └── propertyController.ts  # Lógica de negocio
-    ├── routes/
-    │   └── propertyRoutes.ts  # Definición de endpoints
-    └── middlewares/
-        └── errorHandler.ts    # Manejo de errores
+├── backend/                 # API REST con Express y Prisma
+│   ├── src/
+│   │   ├── server.ts
+│   │   ├── controllers/
+│   │   ├── repositories/
+│   │   ├── routes/
+│   │   └── types/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── seed.ts
+│   └── package.json
+│
+├── frontend/                # React SPA que consume la API
+│   ├── src/
+│   │   ├── lib/api.ts      # Llamadas fetch a la API
+│   │   ├── pages/
+│   │   └── components/
+│   └── package.json
+│
+├── slides/                  # Presentacion del modulo
+└── README.md                # Esta documentacion
 ```
+
+---
+
+## Stack Tecnologico
+
+### Backend
+
+| Dependencia | Version |
+|-------------|---------|
+| Express | 5.2.1 |
+| Prisma | 7.2.0 |
+| TypeScript | 5.9.3 |
+| Zod | 4.1.9 |
+
+### Frontend
+
+| Dependencia | Version |
+|-------------|---------|
+| React | 19.2.1 |
+| Vite | 7.3.0 |
+| TypeScript | 5.9.3 |
+| Tailwind CSS | 4.1.8 |
+
+---
+
+## Inicio Rapido
+
+### 1. Backend
+
+```bash
+cd backend
+
+# Instalar dependencias
+npm install --legacy-peer-deps
+
+# Generar cliente Prisma
+npm run db:generate
+
+# Crear base de datos
+npm run db:push
+
+# Sembrar datos de ejemplo
+npm run db:seed
+
+# Iniciar servidor (puerto 3002)
+npm run dev
+```
+
+### 2. Frontend
+
+```bash
+cd frontend
+
+# Instalar dependencias
+npm install --legacy-peer-deps
+
+# Iniciar servidor (puerto 3001)
+npm run dev
+```
+
+### 3. Abrir en navegador
+
+- Frontend: http://localhost:3001
+- API: http://localhost:3002/api/properties
 
 ---
 
@@ -116,172 +106,164 @@ module3-realestate-hub-api/
 │                              ARQUITECTURA                                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│    ┌─────────────────────────────────────────────────────────────────────┐  │
-│    │                         HTTP Request                                 │  │
-│    │                    (GET /api/properties)                            │  │
-│    └───────────────────────────────┬─────────────────────────────────────┘  │
-│                                    │                                         │
-│                                    ▼                                         │
-│    ┌─────────────────────────────────────────────────────────────────────┐  │
-│    │                       MIDDLEWARES                                    │  │
-│    │           cors() → json() → logger → routes                         │  │
-│    └───────────────────────────────┬─────────────────────────────────────┘  │
-│                                    │                                         │
-│                                    ▼                                         │
-│    ┌─────────────────────────────────────────────────────────────────────┐  │
-│    │                         ROUTES                                       │  │
-│    │   GET /api/properties → getAllProperties()                          │  │
-│    │   POST /api/properties → createProperty()                           │  │
-│    └───────────────────────────────┬─────────────────────────────────────┘  │
-│                                    │                                         │
-│                                    ▼                                         │
-│    ┌─────────────────────────────────────────────────────────────────────┐  │
-│    │                      CONTROLLERS                                     │  │
-│    │   1. Validar entrada (Zod)                                          │  │
-│    │   2. Ejecutar lógica de negocio                                     │  │
-│    │   3. Interactuar con la base de datos                               │  │
-│    │   4. Formatear respuesta                                            │  │
-│    └───────────────────────────────┬─────────────────────────────────────┘  │
-│                                    │                                         │
-│                                    ▼                                         │
-│    ┌─────────────────────────────────────────────────────────────────────┐  │
-│    │                      PRISMA CLIENT                                   │  │
-│    │         Type-safe queries → SQLite Database                         │  │
-│    └─────────────────────────────────────────────────────────────────────┘  │
+│    ┌─────────────────────┐         ┌─────────────────────┐                  │
+│    │      FRONTEND       │         │       BACKEND       │                  │
+│    │    (React + Vite)   │         │  (Express + Prisma) │                  │
+│    │    localhost:3001   │         │   localhost:3002    │                  │
+│    └──────────┬──────────┘         └──────────┬──────────┘                  │
+│               │                               │                              │
+│               │  HTTP REST (fetch)            │                              │
+│               │  GET/POST/PUT/DELETE          │                              │
+│               └───────────────────────────────┤                              │
+│                                               │                              │
+│                                               ▼                              │
+│                                    ┌─────────────────────┐                  │
+│                                    │      DATABASE       │                  │
+│                                    │      (SQLite)       │                  │
+│                                    │    prisma/dev.db    │                  │
+│                                    └─────────────────────┘                  │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Comparación: Prisma vs Room (Android)
+## Configuracion de Puertos
 
-| Concepto        | Prisma (Node.js)              | Room (Android)              |
-| --------------- | ----------------------------- | --------------------------- |
-| Esquema         | schema.prisma                 | @Entity classes             |
-| Cliente         | PrismaClient                  | RoomDatabase                |
-| Queries         | prisma.model.findMany()       | @Query en DAO               |
-| Migraciones     | prisma migrate                | Room auto-migration         |
-| Tipos           | Generados automáticamente     | Generados por KAPT/KSP      |
+Frontend y backend corren en puertos separados para simular un entorno de produccion:
+
+| Componente | Puerto | URL |
+|------------|--------|-----|
+| Frontend (Vite) | 3001 | http://localhost:3001 |
+| Backend (Express) | 3002 | http://localhost:3002 |
+
+### Conectividad
+
+El frontend se conecta al backend usando la URL base definida en `frontend/src/lib/api.ts`:
+
+```typescript
+const API_BASE_URL = 'http://localhost:3002/api';
+```
+
+El backend tiene CORS configurado para aceptar peticiones desde el frontend:
+
+```typescript
+// backend/src/server.ts
+app.use(cors({
+  origin: 'http://localhost:3001'
+}));
+```
 
 ---
 
-## Configuración y Ejecución
+## Refactorizacion del Frontend
 
-### Prerrequisitos
+El frontend (copia del Modulo 2) fue refactorizado para usar la API en lugar de localStorage:
 
-- Node.js 20.19+ o 22.12+
-- npm 10+
+### Cambios principales
 
-### Instalación
+| Archivo | Antes (Modulo 2) | Despues (Modulo 3) |
+|---------|------------------|---------------------|
+| `lib/storage.ts` | localStorage sync | No usado |
+| `lib/api.ts` | No existia | fetch() async |
+| `pages/HomePage.tsx` | `filterProperties()` sync | `await filterProperties()` async |
+| `pages/NewPropertyPage.tsx` | `createProperty()` sync | `await createProperty()` async |
+| `pages/PropertyDetailPage.tsx` | `getPropertyById()` sync | `await getPropertyById()` async |
 
-```bash
-# Navegar al directorio del módulo
-cd web/module3-realestate-hub-api
+### Patron de refactorizacion
 
-# Instalar dependencias
-npm install
+```typescript
+// ANTES (Modulo 2): Operaciones sincronas
+const loadProperties = useCallback(() => {
+  const filtered = filterProperties(filters);
+  setProperties(filtered);
+}, [filters]);
 
-# Generar cliente Prisma
-npm run db:generate
-
-# Crear base de datos y aplicar esquema
-npm run db:push
-
-# Sembrar datos de ejemplo
-npm run db:seed
+// DESPUES (Modulo 3): Operaciones asincronas
+const loadProperties = useCallback(async () => {
+  setIsLoading(true);
+  try {
+    const filtered = await filterProperties(filters);
+    setProperties(filtered);
+  } finally {
+    setIsLoading(false);
+  }
+}, [filters]);
 ```
 
-### Comandos Disponibles
+### Estado de carga
 
-```bash
-# Servidor de desarrollo con hot-reload
-npm run dev
+Se agrego estado `isLoading` para mostrar indicadores mientras se cargan datos:
 
-# Verificar tipos de TypeScript
-npm run type-check
+```typescript
+const [isLoading, setIsLoading] = useState(true);
 
-# Build de producción
-npm run build
+// En el JSX
+{isLoading ? (
+  <p>Cargando propiedades...</p>
+) : (
+  <PropertyList properties={properties} />
+)}
+```
 
-# Ejecutar versión de producción
-npm start
+---
 
-# Abrir Prisma Studio (GUI para la DB)
-npm run db:studio
+## Contexto Pedagogico
 
-# Ejecutar linter
-npm run lint
+Este modulo demuestra la transicion de una app con localStorage (Modulo 2) a una arquitectura cliente-servidor:
+
+### De localStorage a API REST
+
+```typescript
+// Modulo 2: Datos locales (sincrono)
+const properties = getAllProperties();
+
+// Modulo 3: Datos del servidor (async)
+const properties = await fetch('/api/properties')
+  .then(r => r.json())
+  .then(r => r.data);
+```
+
+### Patron Repository (Backend)
+
+```typescript
+// Controller: maneja HTTP
+export async function getAllProperties(req, res) {
+  const properties = await propertyRepository.findAll(filters);
+  res.json({ success: true, data: properties });
+}
+
+// Repository: acceso a datos
+export const propertyRepository = {
+  async findAll(filters) {
+    return prisma.property.findMany({ where: buildWhere(filters) });
+  }
+};
 ```
 
 ---
 
 ## Endpoints de la API
 
-| Método | Endpoint               | Descripción                    |
-| ------ | ---------------------- | ------------------------------ |
-| GET    | /health                | Health check                   |
+| Metodo | Endpoint               | Descripcion                     |
+|--------|------------------------|---------------------------------|
+| GET    | /health                | Health check                    |
 | GET    | /api/properties        | Listar propiedades (con filtros)|
-| GET    | /api/properties/:id    | Obtener propiedad por ID       |
-| POST   | /api/properties        | Crear nueva propiedad          |
-| PUT    | /api/properties/:id    | Actualizar propiedad           |
-| DELETE | /api/properties/:id    | Eliminar propiedad             |
+| GET    | /api/properties/:id    | Obtener propiedad por ID        |
+| POST   | /api/properties        | Crear nueva propiedad           |
+| PUT    | /api/properties/:id    | Actualizar propiedad            |
+| DELETE | /api/properties/:id    | Eliminar propiedad              |
 
-Ver [API_CONTRACT.md](./API_CONTRACT.md) para documentación detallada.
-
----
-
-## Notas Educativas
-
-### REST vs otros estilos de API
-
-| Estilo    | Características                              | Uso típico          |
-| --------- | -------------------------------------------- | ------------------- |
-| REST      | Recursos + verbos HTTP, stateless            | APIs públicas       |
-| GraphQL   | Query language, un endpoint                  | Apps complejas      |
-| gRPC      | Binary protocol, contracts                   | Microservicios      |
-
-### Middleware en Express
-
-```typescript
-// Los middlewares se ejecutan en orden de declaración
-app.use(cors());        // 1. Habilitar CORS
-app.use(express.json());// 2. Parsear JSON
-app.use(logger);        // 3. Logging
-app.use('/api', routes);// 4. Rutas
-app.use(errorHandler);  // 5. Manejo de errores (siempre al final)
-```
+Ver [backend/API_CONTRACT.md](./backend/API_CONTRACT.md) para documentacion detallada.
 
 ---
 
-## Experimentos Sugeridos
+## Notas sobre Instalacion
 
-1. **Paginación**: Implementa limit/offset para listados grandes
-2. **Autenticación**: Añade JWT para proteger endpoints
-3. **Rate Limiting**: Limita peticiones por IP
-4. **Caching**: Implementa caché con Redis
-5. **Búsqueda avanzada**: Usa full-text search de SQLite
-
----
-
-## Conectar con Module 2
-
-Para usar esta API desde el frontend de Module 2, actualiza el archivo `storage.ts`:
-
-```typescript
-// Antes (localStorage)
-export function getAllProperties(): Property[] {
-  const data = localStorage.getItem('properties');
-  return data ? JSON.parse(data) : [];
-}
-
-// Después (API)
-export async function getAllProperties(): Promise<Property[]> {
-  const response = await fetch('http://localhost:3002/api/properties');
-  const data = await response.json();
-  return data.data;
-}
-```
+> **Sobre --legacy-peer-deps**: Este flag es necesario porque algunas dependencias
+> aun no declaran soporte para las versiones mas recientes de TypeScript 5.9,
+> Prisma 7, y Vite 7. El flag permite instalar las dependencias ignorando
+> conflictos de peer dependencies. Las dependencias funcionan correctamente.
 
 ---
 
@@ -291,6 +273,6 @@ Este proyecto es de uso educativo y fue creado como material de aprendizaje.
 
 ---
 
-## Créditos
+## Creditos
 
-> Este proyecto ha sido generado usando Claude Code y adaptado con fines educativos por Adrián Catalán.
+> Este proyecto ha sido generado usando Claude Code y adaptado con fines educativos por Adrian Catalan.

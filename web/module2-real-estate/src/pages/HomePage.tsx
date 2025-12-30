@@ -88,7 +88,7 @@ export function HomePage(): React.ReactElement {
   const handleFilterChange = (key: keyof PropertyFilters, value: string | number): void => {
     setFilters((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: value === 'all' ? undefined : value,
     }));
   };
 
@@ -149,14 +149,14 @@ export function HomePage(): React.ReactElement {
 
           {/* Tipo de propiedad */}
           <Select
-            value={filters.propertyType ?? ''}
+            value={filters.propertyType ?? 'all'}
             onValueChange={(value) => handleFilterChange('propertyType', value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Tipo de propiedad" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos los tipos</SelectItem>
+              <SelectItem value="all">Todos los tipos</SelectItem>
               {PROPERTY_TYPES.map((type) => (
                 <SelectItem key={type} value={type}>
                   {PROPERTY_TYPE_LABELS[type]}
@@ -165,16 +165,16 @@ export function HomePage(): React.ReactElement {
             </SelectContent>
           </Select>
 
-          {/* Tipo de operación */}
+          {/* Tipo de operacion */}
           <Select
-            value={filters.operationType ?? ''}
+            value={filters.operationType ?? 'all'}
             onValueChange={(value) => handleFilterChange('operationType', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Operación" />
+              <SelectValue placeholder="Operacion" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Venta y Alquiler</SelectItem>
+              <SelectItem value="all">Venta y Alquiler</SelectItem>
               {OPERATION_TYPES.map((type) => (
                 <SelectItem key={type} value={type}>
                   {OPERATION_TYPE_LABELS[type]}

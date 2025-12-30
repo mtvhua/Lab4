@@ -306,7 +306,7 @@ function initializeApp(): void {
     // Enfocamos el input de búsqueda para UX
     searchInput.focus();
 
-    console.log('🌍 Country Explorer inicializado correctamente');
+    console.log('Country Explorer inicializado correctamente');
   } catch (error) {
     console.error('Error al inicializar la aplicación:', error);
   }

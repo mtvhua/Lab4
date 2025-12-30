@@ -40,7 +40,7 @@ function initializeFirebaseAdmin(): App {
   // Si no hay credenciales, usamos modo emulador o fallback
   if (!projectId || !clientEmail || !privateKey) {
     console.warn(
-      '⚠️ Firebase Admin: Credenciales no configuradas. Usando modo de desarrollo.'
+      'Firebase Admin: Credenciales no configuradas. Usando modo de desarrollo.'
     );
     // Inicializamos sin credenciales (útil para desarrollo local sin Firebase real)
     return initializeApp({

@@ -34,7 +34,7 @@ style: |
 
 ## EventPass App
 
-We are building an Event Management platform with Next.js 15.
+We are building an Event Management platform with Next.js 16.
 
 **Core Requirements:**
 1.  **Event Listing**: Display events with filtering options.
@@ -273,7 +273,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
 
 ## Client vs Server Components
 
-Next.js 15 defaults to **Server Components**.
+Next.js 16 defaults to **Server Components**.
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
@@ -283,14 +283,14 @@ Next.js 15 defaults to **Server Components**.
 │  Server Components                  Client Components            │
 │  (default)                          ('use client')               │
 │  ──────────────────                 ──────────────────           │
-│  ✅ Direct DB access                ✅ useState, useEffect       │
-│  ✅ Fetch data                      ✅ Event handlers            │
-│  ✅ Access secrets                  ✅ Browser APIs              │
-│  ✅ Zero JS to client               ✅ Interactivity             │
-│                                                                  │
-│  ❌ No hooks                        ❌ No direct DB               │
-│  ❌ No event handlers               ❌ Secrets exposed            │
-│  ❌ No browser APIs                 ❌ More JS to client          │
+|  [+] Direct DB access               [+] useState, useEffect      |
+|  [+] Fetch data                     [+] Event handlers           |
+|  [+] Access secrets                 [+] Browser APIs             |
+|  [+] Zero JS to client              [+] Interactivity            |
+|                                                                  |
+|  [-] No hooks                       [-] No direct DB              |
+|  [-] No event handlers              [-] Secrets exposed           |
+|  [-] No browser APIs                [-] More JS to client         |
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -709,7 +709,7 @@ export default function EventsPage() {
 Fetch data in parallel to reduce waterfall.
 
 ```tsx
-// ❌ Sequential (slow)
+// BAD: Sequential (slow)
 export default async function Page({ params }: Props) {
     const { id } = await params;
     const event = await getEvent(id);        // Wait...
@@ -717,7 +717,7 @@ export default async function Page({ params }: Props) {
     const related = await getRelated(id);    // Then wait...
 }
 
-// ✅ Parallel (fast)
+// GOOD: Parallel (fast)
 export default async function Page({ params }: Props) {
     const { id } = await params;
 

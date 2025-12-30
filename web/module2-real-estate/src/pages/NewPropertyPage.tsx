@@ -7,6 +7,7 @@
 import type React from 'react';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PropertyForm } from '@/components/PropertyForm';
@@ -38,11 +39,17 @@ export function NewPropertyPage(): React.ReactElement {
 
     try {
       createProperty(data);
+      // Mostramos toast de exito
+      toast.success('Propiedad creada exitosamente', {
+        description: data.title,
+      });
       // Redirigimos al home después de crear
       navigate('/');
     } catch (error) {
       console.error('Error al crear propiedad:', error);
-      alert('Error al guardar la propiedad. Intenta de nuevo.');
+      toast.error('Error al guardar la propiedad', {
+        description: 'Por favor intenta de nuevo.',
+      });
       setIsSubmitting(false);
     }
   };

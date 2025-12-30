@@ -6,6 +6,23 @@
 
 ---
 
+## Stack Tecnologico
+
+| Dependencia | Version |
+|-------------|---------|
+| Next.js | 16.1.1 |
+| React | 19.2.1 |
+| TypeScript | 5.9.3 |
+| Tailwind CSS | 4.1.8 |
+| Firebase | 12.7.0 |
+| Firebase Admin | 13.0.2 |
+| @google/genai | 1.34.0 |
+| Zod | 4.1.9 |
+
+> Ver [TECH_STACK.md](./TECH_STACK.md) para detalles completos.
+
+---
+
 ## Descripción del Proyecto
 
 **EventPass Pro** extiende Module 4 añadiendo servicios en la nube y generación de contenido con IA. Este proyecto enseña:
@@ -183,43 +200,117 @@ module5-event-pass-pro/
 
 ---
 
-## Configuración de Firebase
+## Configuracion de Firebase
 
 ### 1. Crear Proyecto Firebase
 
 1. Ve a [Firebase Console](https://console.firebase.google.com)
-2. Crea un nuevo proyecto
-3. Habilita Authentication (Email/Password + Google)
-4. Crea una base de datos Firestore
+2. Crea un nuevo proyecto (o usa uno existente)
+3. Habilita los servicios necesarios:
+   - **Authentication**: Email/Password + Google
+   - **Firestore Database**: Base de datos NoSQL
+   - **Storage** (opcional): Para almacenar imagenes de posters
 
-### 2. Configurar Variables de Entorno
+### 2. Configurar Authentication
+
+1. Firebase Console → Authentication → Sign-in method
+2. Habilita **Correo electronico/Contrasena**
+3. Habilita **Google** (configura el email de soporte)
+4. En **Authorized domains**, agrega `localhost` para desarrollo
+
+### 3. Configurar Firestore
+
+1. Firebase Console → Firestore Database → Crear base de datos
+2. Selecciona **modo de prueba** para desarrollo (o configura reglas)
+3. Elige una ubicacion cercana a tus usuarios
+
+**Reglas de seguridad sugeridas:**
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /events/{eventId} {
+      // Cualquiera puede leer eventos publicados
+      allow read: if resource.data.status == 'publicado';
+
+      // Solo usuarios autenticados pueden crear
+      allow create: if request.auth != null;
+
+      // Solo el organizador puede modificar su evento
+      allow update, delete: if request.auth != null
+        && request.auth.uid == resource.data.organizerId;
+    }
+  }
+}
+```
+
+### 4. Obtener Credenciales del Cliente
+
+1. Firebase Console → Configuracion del proyecto (icono de engranaje)
+2. Seccion **Tus apps** → Agrega una app web
+3. Copia los valores de configuracion:
+
+```
+apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId
+```
+
+### 5. Obtener Credenciales de Admin (Servidor)
+
+1. Firebase Console → Configuracion → **Cuentas de servicio**
+2. Clic en **Generar nueva clave privada**
+3. Descarga el archivo JSON
+4. Copia `project_id`, `client_email` y `private_key`
+
+### 6. Configurar Variables de Entorno
 
 ```bash
 # Copia el archivo de ejemplo
 cp .env.example .env.local
-
-# Edita .env.local con tus credenciales
 ```
 
-### 3. Credenciales de Admin
+Edita `.env.local` con tus credenciales:
 
-1. Firebase Console → Configuración → Cuentas de servicio
-2. Genera nueva clave privada
-3. Copia los valores a `FIREBASE_ADMIN_*`
+```bash
+# Cliente (visibles en el navegador)
+NEXT_PUBLIC_FIREBASE_API_KEY=tu_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu-proyecto
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tu-proyecto.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
+NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef123456
+
+# Admin/Servidor (secretos)
+FIREBASE_ADMIN_PROJECT_ID=tu-proyecto
+FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk@tu-proyecto.iam.gserviceaccount.com
+FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+```
+
+**IMPORTANTE:**
+- Las variables `NEXT_PUBLIC_*` son visibles en el cliente (no son secretas)
+- Las variables `FIREBASE_ADMIN_*` son secretas (solo servidor)
+- NUNCA subas `.env.local` a git
 
 ---
 
-## Configuración de Gemini AI
+## Configuracion de Gemini AI
 
 ### 1. Obtener API Key
 
-1. Ve a [Google AI Studio](https://aistudio.google.com)
-2. Crea una API key
-3. Copia a `GOOGLE_AI_API_KEY`
+1. Ve a [Google AI Studio](https://aistudio.google.com/apikey)
+2. Crea una nueva API key
 
-### 2. Uso en la Aplicación
+### 2. Configurar Variable de Entorno
 
-El botón "Generar con IA" en el formulario de eventos usa Gemini para crear descripciones atractivas automáticamente.
+En tu archivo `.env.local`:
+
+```bash
+GOOGLE_AI_API_KEY=tu_gemini_api_key_aqui
+```
+
+### 3. Uso en la Aplicacion
+
+El boton "Generar con IA" en el formulario de eventos usa Gemini para crear descripciones atractivas automaticamente.
 
 ---
 
