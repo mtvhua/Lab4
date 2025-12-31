@@ -41,9 +41,11 @@ interface PropertyCardProps {
  * @param onDelete - Callback opcional para eliminar
  */
 export function PropertyCard({ property, onDelete }: PropertyCardProps): React.ReactElement {
-  // Imagen por defecto si no hay imágenes
+  // Uso de Optional Chaining (?.) y Nullish Coalescing (??)
+  // 1. property.images?.[0] -> Si images es null/undefined, devuelve undefined sin lanzar error
+  // 2. ?? -> Si lo anterior es null/undefined, usa el placeholder
   const imageUrl =
-    property.images[0] ?? `https://placehold.co/800x600/e2e8f0/64748b?text=${encodeURIComponent(property.propertyType)}`;
+    property.images?.[0] ?? `https://placehold.co/800x600/e2e8f0/64748b?text=${encodeURIComponent(property.propertyType)}`;
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -58,11 +60,10 @@ export function PropertyCard({ property, onDelete }: PropertyCardProps): React.R
 
         {/* Badge de tipo de operación */}
         <span
-          className={`absolute top-3 left-3 px-3 py-1 text-xs font-semibold rounded-full ${
-            property.operationType === 'venta'
-              ? 'bg-green-500 text-white'
-              : 'bg-blue-500 text-white'
-          }`}
+          className={`absolute top-3 left-3 px-3 py-1 text-xs font-semibold rounded-full ${property.operationType === 'venta'
+            ? 'bg-green-500 text-white'
+            : 'bg-blue-500 text-white'
+            }`}
         >
           {OPERATION_TYPE_LABELS[property.operationType]}
         </span>

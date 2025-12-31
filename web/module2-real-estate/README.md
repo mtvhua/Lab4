@@ -8,68 +8,75 @@
 
 ## Stack Tecnologico
 
-| Dependencia | Version |
-|-------------|---------|
-| React | 19.2.1 |
-| React Router DOM | 7.1.1 |
-| TypeScript | 5.9.3 |
-| Vite | 7.3.0 |
-| Tailwind CSS | 4.1.8 |
-| Zod | 4.1.9 |
-| React Hook Form | 7.54.2 |
-| Lucide React | 0.469.0 |
-
-> Ver [TECH_STACK.md](./TECH_STACK.md) para detalles completos.
+| Dependencia | Version | Propósito |
+|-------------|---------|-----------|
+| **React** | 19.2.1 | Biblioteca UI Core |
+| **Vite** | 6.0.0+ | Build tool & Dev Server |
+| **Tailwind CSS** | 4.1.8 | Framework de estilos (Motor v4) |
+| **Shadcn UI** | Manual | Componentes UI reutilizables |
+| **React Hook Form** | 7.54.2 | Gestión de estado de formularios |
+| **Zod** | 4.1.9 | Esquemas de validación |
+| **Sonner** | 2.0.7 | Sistema de notificaciones (Toasts) |
+| **React Router** | 7.1.1 | Enrutamiento cliente |
 
 ---
 
 ## Descripción del Proyecto
 
-**Real Estate React** es una aplicación web de bienes raíces que permite listar, buscar y gestionar propiedades inmobiliarias. El proyecto enseña conceptos fundamentales de desarrollo frontend moderno con React 19:
+**Real Estate React** es una aplicación web de bienes raíces que permite listar, buscar y gestionar propiedades inmobiliarias. El proyecto implementa las últimas tecnologías frontend disponibles (React 19, Tailwind v4) para ofrecer una experiencia de desarrollo moderna y eficiente.
 
-1. **Componentes React 19** con hooks modernos
-2. **Formularios validados** con Zod + React Hook Form
-3. **Shadcn UI** para componentes accesibles y estilizados
-4. **React Router** para navegación cliente
-5. **localStorage** para persistencia sin backend
+Concepts clave implementados:
+
+1.  **Tailwind CSS v4**: Configuración nativa CSS sin `tailwind.config.js`. Las variables de tema se definen directamente en CSS usando `@theme`.
+2.  **Validación Robusta**: Implementación de un *Custom Resolver* manual para conectar Zod con React Hook Form, garantizando independencia de versiones y control total de errores.
+3.  **Componentes Shadcn UI**: Arquitectura de componentes "copy-paste" para máxima personalización.
+4.  **Estado Local & Persistencia**: Combinación de `useState` para interactividad y `localStorage` para persistencia de datos.
 
 ---
 
 ## Contexto Pedagógico
 
-Este módulo cubre los siguientes conceptos:
+Este módulo cubre implementaciones avanzadas de los siguientes conceptos:
 
-### 1. React 19 Core y Hooks
+### 1. React 19 & Hooks Modernos
+
+Uso de los últimos hooks estables para gestión de estado y efectos:
 
 ```tsx
-// useState para estado local
+// Gestión eficiente de colecciones
 const [properties, setProperties] = useState<Property[]>([]);
 
-// useCallback para memorizar funciones
+// Memorización para optimizar re-renders
 const loadProperties = useCallback(() => {
   const filtered = filterProperties(filters);
   setProperties(filtered);
 }, [filters]);
-
-// useEffect para efectos secundarios
-useEffect(() => {
-  loadProperties();
-}, [loadProperties]);
 ```
 
-### 2. Formularios con Zod + React Hook Form
+### 2. Validación Type-Safe con Custom Resolver
+
+En lugar de depender de adaptadores genéricos, implementamos una capa de validación manual que conecta Zod con React Hook Form. Esto nos da control total sobre cómo se procesan y muestran los errores.
 
 ```tsx
-// Esquema de validación con Zod
-const propertySchema = z.object({
-  title: z.string().min(10, 'El título debe tener al menos 10 caracteres'),
-  price: z.number().positive('El precio debe ser mayor a 0'),
-});
+// Validación segura dentro del componente
+resolver: async (values) => {
+  try {
+    // Validación estricta con Zod
+    const result = createPropertySchema.safeParse(values);
+    
+    if (result.success) {
+      return { values: result.data, errors: {} };
+    }
 
-// Hook del formulario
-const { register, handleSubmit, formState: { errors } } = useForm({
-  resolver: zodResolver(propertySchema),
-});
+    // Mapeo manual de errores para feedback preciso
+    const errors = result.error.issues.reduce(/* lógica de mapeo */);
+    
+    return { values: {}, errors };
+  } catch (error) {
+    // Manejo de errores críticos
+    return { values: {}, errors: { root: { type: 'server', message: 'Error crítico' } } };
+  }
+}
 ```
 
 ### 3. Shadcn UI y Componentes Reutilizables

@@ -18,7 +18,7 @@
 
 import type React from 'react';
 import { useForm, type FieldErrors } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,10 +77,14 @@ export function PropertyForm({
   // =========================================================================
   // CONFIGURACIÓN DE REACT HOOK FORM
   // =========================================================================
-  // useForm() configura el formulario con:
-  // - resolver: Conecta Zod para validación
-  // - defaultValues: Valores iniciales del formulario
-  // - mode: 'onBlur' valida cuando el campo pierde foco
+  // initialize useForm with a custom resolver for maximum control and safety.
+  //
+  // ## ¿Por qué un Custom Resolver?
+  // Aunque existen librerías como @hookform/resolvers, implementarlo manualmente
+  // nos da:
+  // 1. Control total sobre el formato de errores
+  // 2. Independencia de versiones específicas de librerías externas
+  // 3. Tipado estricto y seguro (Type Safety)
   // =========================================================================
   const {
     register,
@@ -89,7 +93,52 @@ export function PropertyForm({
     watch,
     formState: { errors },
   } = useForm<CreatePropertyInput>({
-    resolver: zodResolver(createPropertySchema),
+    // Custom Resolver: Conecta Zod con React Hook Form manualmente
+    resolver: async (values) => {
+      try {
+        // 1. Validamos los datos usando el método seguro de Zod
+        const result = createPropertySchema.safeParse(values);
+
+        // 2. Si es exitoso, retornamos los datos limpios
+        if (result.success) {
+          return {
+            values: result.data,
+            errors: {},
+          };
+        }
+
+        // 3. Si hay errores, los transformamos al formato que RHF espera
+        // Zod devuelve 'issues', mapeamos cada uno a un objeto de error
+        const errors = result.error.issues.reduce(
+          (allErrors, currentError) => ({
+            ...allErrors,
+            // path[0] es el nombre del campo (ej: 'title', 'price')
+            [currentError.path[0]]: {
+              type: currentError.code,
+              message: currentError.message,
+            },
+          }),
+          {} as Record<string, { type: string; message: string }>
+        );
+
+        return {
+          values: {},
+          errors,
+        };
+      } catch (error) {
+        // 4. Capturamos errores inesperados para evitar crashes
+        console.error('Error crítico de validación:', error);
+        return {
+          values: {},
+          errors: {
+            root: {
+              type: 'server',
+              message: 'Error inesperado al validar el formulario',
+            },
+          },
+        };
+      }
+    },
     defaultValues: {
       title: '',
       description: '',
@@ -105,44 +154,29 @@ export function PropertyForm({
       images: [],
       ...defaultValues,
     },
-    mode: 'onTouched',
-    reValidateMode: 'onChange',
+    mode: 'onTouched', // Valida al interactuar con el campo (mejor UX)
+    reValidateMode: 'onChange', // Re-valida al corregir
   });
 
-  // Observamos valores para el Select y para el contador de caracteres
+  // Observamos valores para lógica visual (no validación)
   const propertyType = watch('propertyType');
   const operationType = watch('operationType');
   const descriptionValue = watch('description');
 
   /**
-   * Maneja errores de validacion mostrando toasts.
-   * Se llama cuando el formulario no pasa la validacion de Zod.
+   * Callback de error: Se ejecuta solo si la validación falla.
+   * Proporciona feedback visual inmediato al usuario via Toast.
    */
-  const onValidationError = (fieldErrors: FieldErrors<CreatePropertyInput>): void => {
-    console.log('=== ERRORES DE VALIDACION ===', fieldErrors);
-
-    // Contamos los errores
-    const errorCount = Object.keys(fieldErrors).length;
-
-    // Construimos la descripcion con los errores
-    const errorMessages = Object.values(fieldErrors)
-      .map((error) => error?.message)
-      .filter((msg): msg is string => typeof msg === 'string')
-      .slice(0, 3);
-
-    const description = errorMessages.join('. ') + (errorCount > 3 ? '...' : '');
-
-    console.log('=== MOSTRANDO TOAST ===', { errorCount, description });
-
-    // Mostramos toast con resumen de errores
-    toast.error(`Hay ${errorCount} ${errorCount === 1 ? 'error' : 'errores'} en el formulario`, {
-      description,
-      duration: 5000,
-    });
+  const onValidationError = (): void => {
+    toast.error('Por favor corrige los errores señalados en el formulario');
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, onValidationError)} className="space-y-6">
+    // handleSubmit gestiona el flujo: Si valida ejecuta onSubmit, si no onValidationError
+    <form
+      onSubmit={handleSubmit(onSubmit, onValidationError)}
+      className="space-y-6"
+    >
       {/* Sección: Información Básica */}
       <Card>
         <CardHeader>
@@ -346,6 +380,7 @@ export function PropertyForm({
       </Card>
 
       {/* Botón de envío */}
+
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? 'Guardando...' : 'Guardar Propiedad'}
       </Button>
