@@ -49,7 +49,7 @@ interface EventsPageProps {
  * Página de listado de eventos.
  */
 export default async function EventsPage({ searchParams }: EventsPageProps): Promise<React.ReactElement> {
-  // Await searchParams (Next.js 15+ async searchParams)
+  // Await searchParams (Next.js 16+ async searchParams)
   const params = await searchParams;
 
   // Construimos los filtros desde searchParams

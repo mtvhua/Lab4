@@ -26,7 +26,7 @@ export function Footer(): React.ReactElement {
 
           {/* Copyright */}
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} EventPass Pro. Creado con Next.js 15, Firebase y Gemini AI.
+            © {new Date().getFullYear()} EventPass Pro. Creado con Next.js 16, Firebase y Gemini AI.
           </p>
 
           {/* Links */}

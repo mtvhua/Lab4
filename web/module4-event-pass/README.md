@@ -1,6 +1,6 @@
 # Módulo 4 - EventPass
 
-## Plataforma de Gestión de Eventos con Next.js 15
+## Plataforma de Gestión de Eventos con Next.js 16
 
 > Aplicación fullstack con Server Components, Server Actions y React 19.
 
@@ -31,7 +31,7 @@
 
 ## Descripción del Proyecto
 
-**EventPass** es una plataforma de gestión de eventos que demuestra las capacidades de Next.js 15 con App Router. Este proyecto enseña:
+**EventPass** es una plataforma de gestión de eventos que demuestra las capacidades de Next.js 16 con App Router. Este proyecto enseña:
 
 1. **Server Components** - Renderizado en servidor por defecto
 2. **Server Actions** - Mutaciones sin API routes manuales
@@ -153,7 +153,7 @@ module4-event-pass/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         ARQUITECTURA NEXT.JS 15                          │
+│                         ARQUITECTURA NEXT.JS 16                          │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │   BROWSER                                                                │

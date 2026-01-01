@@ -5,7 +5,7 @@ Bienvenido al track de Web del curso **Aplicaciones Web Avanzadas**. Aquí apren
 ## Tecnologías Principales
 
 *   **Lenguaje**: TypeScript 5.7.3
-*   **Frontend**: React 19, Next.js 15.1, Vite 6.3
+*   **Frontend**: React 19, Next.js 16.1, Vite 6.3
 *   **Backend**: Node.js, Express, Prisma ORM
 *   **UI/Styling**: HTML5, Tailwind CSS 4.1, Shadcn UI
 *   **Forms**: Zod 3.24, React Hook Form
