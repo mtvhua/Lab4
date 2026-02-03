@@ -27,12 +27,12 @@
 # El plugin que permite a Gradle compilar proyectos Android.
 # Debe ser compatible con la versión de Gradle Wrapper.
 # AGP 8.10.0 requiere Gradle 8.11+ y JDK 17+
-agp = "8.13.1"
+agp = "9.0.0"
 
 # --- Kotlin ---
 # Versión del compilador y runtime de Kotlin.
 # Debe ser compatible con el Compose Compiler.
-kotlin = "2.1.20"
+kotlin = "2.2.10"
 
 # --- Android SDK Versions ---
 # compileSdk: SDK contra el que se compila (permite usar APIs nuevas)

@@ -12,9 +12,9 @@
 # -------------------------
 # Android & Kotlin Core
 # -------------------------
-agp = "8.13.2"                           # Android Gradle Plugin
-kotlin = "2.0.21"                        # Kotlin - debe coincidir con KSP
-ksp = "2.0.21-1.0.28"                   # KSP - primera parte DEBE coincidir con Kotlin
+agp = "9.0.0"                           # Android Gradle Plugin
+kotlin = "2.2.10"                        # Kotlin - debe coincidir con KSP
+ksp = "2.3.2"                   # KSP - primera parte DEBE coincidir con Kotlin
 
 # -------------------------
 # Android SDK

@@ -95,7 +95,8 @@ interface AmiiboApiService {
          * La URL base incluye hasta "/api/" y cada método especifica
          * el endpoint específico (ej: "amiibo").
          */
-        const val BASE_URL = "https://www.amiiboapi.com/api/"
+        //const val BASE_URL = "https://www.amiiboapi.com/api/"
+        const val BASE_URL = "https://amiiboapi-7eg6.onrender.com/api/"
     }
 }
 
