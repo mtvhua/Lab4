@@ -4,7 +4,7 @@ theme: default
 paginate: true
 backgroundColor: #fff
 style: |
-  section { font-family: 'Inter', sans-serif; }
+  section { font-family: 'Inter', sans-serif; padding: 30px; }
   h1 { color: #1A477B; }
   h2 { color: #000000; }
   code { background-color: #f0f0f0; padding: 0.2em; border-radius: 4px; }
@@ -67,17 +67,17 @@ How do we coordinate Camera + GPS + Database without creating spaghetti code?
 The ViewModel talks to *everything* directly.
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│                          ViewModel                              │
-│                                                                 │
-│   ┌──────────┐    ┌──────────┐    ┌──────────┐                 │
-│   │ CameraX  │    │   GPS    │    │   Room   │                 │
-│   └──────────┘    └──────────┘    └──────────┘                 │
-│        │               │               │                        │
-│        ▼               ▼               ▼                        │
-│   Knows camera    Knows location   Knows SQL                   │
-│   lifecycle       permissions      queries                      │
-└─────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────┐
+│                          ViewModel                        │
+│                                                           │
+│   ┌──────────┐    ┌──────────┐    ┌──────────┐            │
+│   │ CameraX  │    │   GPS    │    │   Room   │            │
+│   └──────────┘    └──────────┘    └──────────┘            │
+│        │               │               │                  │
+│        ▼               ▼               ▼                  │
+│   Knows camera    Knows location   Knows SQL              │
+│   lifecycle       permissions      queries                │
+└───────────────────────────────────────────────────────────┘
 ```
 
 **Result:** ViewModel becomes a "God Class" with 500+ lines.
@@ -300,12 +300,12 @@ CameraX uses a **Use Case** pattern. You declare *what* you want, not *how*.
 │                     CameraX Use Cases                           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  ┌──────────┐  ┌──────────────┐  ┌──────────────┐              │
-│  │ Preview  │  │ ImageCapture │  │ VideoCapture │              │
-│  │          │  │              │  │              │              │
-│  │ Show     │  │ Take still   │  │ Record       │              │
-│  │ viewfind │  │ photos       │  │ videos       │              │
-│  └──────────┘  └──────────────┘  └──────────────┘              │
+│  ┌──────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │ Preview  │  │ ImageCapture │  │ VideoCapture │               │
+│  │          │  │              │  │              │               │
+│  │ Show     │  │ Take still   │  │ Record       │               │
+│  │ viewfind │  │ photos       │  │ videos       │               │
+│  └──────────┘  └──────────────┘  └──────────────┘               │
 │                                                                 │
 │                  ┌───────────────┐                              │
 │                  │ ImageAnalysis │                              │
@@ -685,6 +685,8 @@ android {
 }
 ```
 
+---
+
 **Step 3: AndroidManifest.xml**
 ```xml
 <meta-data
@@ -793,12 +795,12 @@ suspend fun example(): Result = suspendCancellableCoroutine { continuation ->
 │                    FusedLocationProvider                        │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│   ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    │
-│   │   GPS   │    │ WiFi AP │    │  Cell   │    │ Sensors │    │
-│   │         │    │ Database│    │ Towers  │    │ (Accel) │    │
-│   └────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘    │
-│        │              │              │              │          │
-│        └──────────────┴──────────────┴──────────────┘          │
+│   ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐      │
+│   │   GPS   │    │ WiFi AP │    │  Cell   │    │ Sensors │      │
+│   │         │    │ Database│    │ Towers  │    │ (Accel) │      │
+│   └────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘      │
+│        │              │              │              │           │
+│        └──────────────┴──────────────┴──────────────┘           │
 │                          │                                      │
 │                    Kalman Filter                                │
 │                          │                                      │
@@ -844,22 +846,22 @@ Room's `InvalidationTracker` listens for table changes and re-queries.
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Compose UI Tree                          │
 │                                                                 │
-│    ┌────────────────────────────────────────────────────────┐  │
-│    │                   GoogleMap Composable                  │  │
-│    │                                                        │  │
-│    │   ┌────────────────────────────────────────────────┐  │  │
-│    │   │              AndroidView                        │  │  │
-│    │   │                                                │  │  │
-│    │   │   ┌────────────────────────────────────────┐  │  │  │
-│    │   │   │            MapView (View)               │  │  │  │
-│    │   │   │                                        │  │  │  │
-│    │   │   │   ┌────────────────────────────────┐  │  │  │  │
-│    │   │   │   │       GoogleMap Object          │  │  │  │  │
-│    │   │   │   │       (Native Maps SDK)         │  │  │  │  │
-│    │   │   │   └────────────────────────────────┘  │  │  │  │
-│    │   │   └────────────────────────────────────────┘  │  │  │
-│    │   └────────────────────────────────────────────────┘  │  │
-│    └────────────────────────────────────────────────────────┘  │
+│    ┌────────────────────────────────────────────────────────┐   │
+│    │                   GoogleMap Composable                 │   │
+│    │                                                        │   │
+│    │   ┌────────────────────────────────────────────────┐   │   │
+│    │   │              AndroidView                       │   │   │
+│    │   │                                                │   │   │
+│    │   │   ┌────────────────────────────────────────┐   │   │   │
+│    │   │   │            MapView (View)              │   │   │   │
+│    │   │   │                                        │   │   │   │
+│    │   │   │   ┌────────────────────────────────┐   │   │   │   │
+│    │   │   │   │       GoogleMap Object         │   │   │   │   │
+│    │   │   │   │       (Native Maps SDK)        │   │   │   │   │
+│    │   │   │   └────────────────────────────────┘   │   │   │   │
+│    │   │   └────────────────────────────────────────┘   │   │   │
+│    │   └────────────────────────────────────────────────┘   │   │
+│    └────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -883,6 +885,8 @@ Implement typed error handling for `CameraUtils.capturePhoto()` that distinguish
 - Camera was closed unexpectedly
 - Capture failed (hardware issue)
 - File I/O error (storage full or permissions)
+
+---
 
 **Files to Modify:**
 - `utils/CameraUtils.kt`
@@ -915,6 +919,8 @@ Implement spot deletion that:
 - Removes the spot from Room database
 - Deletes the associated photo file from internal storage
 
+---
+
 **Files to Modify:**
 - `data/dao/SpotDao.kt`
 - `repository/SpotRepository.kt`
@@ -944,26 +950,13 @@ Implement spot deletion that:
 
 ## Resources
 
-**Repository Pattern**
-*   [Guide to App Architecture](https://developer.android.com/topic/architecture)
-*   [Data Layer Guide](https://developer.android.com/topic/architecture/data-layer)
-*   [Repository Pattern in Android](https://developer.android.com/codelabs/basic-android-kotlin-training-repository-pattern)
-*   [Clean Architecture with MVVM](https://proandroiddev.com/clean-architecture-data-flow-dependency-rule-615f78a0ccbb)
-*   [Testing Repositories](https://developer.android.com/training/testing/local-tests)
-
-**CameraX**
-*   [CameraX Overview](https://developer.android.com/training/camerax)
-*   [CameraX Codelab](https://developer.android.com/codelabs/camerax-getting-started)
-*   [ImageCapture Use Case](https://developer.android.com/training/camerax/take-photo)
-*   [CameraX Architecture](https://developer.android.com/training/camerax/architecture)
-*   [Camera Permissions Guide](https://developer.android.com/training/permissions/requesting)
-
-**Google Maps SDK**
-*   [Maps SDK for Android](https://developers.google.com/maps/documentation/android-sdk/overview)
-*   [Maps Compose Library](https://developers.google.com/maps/documentation/android-sdk/maps-compose)
-*   [FusedLocationProvider](https://developer.android.com/training/location)
-*   [Location Permissions](https://developer.android.com/training/location/permissions)
-*   [Maps API Key Setup](https://developers.google.com/maps/documentation/android-sdk/get-api-key)
+| Repository Pattern | CameraX | Google Maps SDK |
+|:-------------------|:--------|:----------------|
+| [Guide to App Architecture](https://developer.android.com/topic/architecture) | [CameraX Overview](https://developer.android.com/training/camerax) | [Maps SDK for Android](https://developers.google.com/maps/documentation/android-sdk/overview) |
+| [Data Layer Guide](https://developer.android.com/topic/architecture/data-layer) | [CameraX Codelab](https://developer.android.com/codelabs/camerax-getting-started) | [Maps Compose Library](https://developers.google.com/maps/documentation/android-sdk/maps-compose) |
+| [Repository Pattern in Android](https://developer.android.com/codelabs/basic-android-kotlin-training-repository-pattern) | [ImageCapture Use Case](https://developer.android.com/training/camerax/take-photo) | [FusedLocationProvider](https://developer.android.com/training/location) |
+| [Clean Architecture with MVVM](https://proandroiddev.com/clean-architecture-data-flow-dependency-rule-615f78a0ccbb) | [CameraX Architecture](https://developer.android.com/training/camerax/architecture) | [Location Permissions](https://developer.android.com/training/location/permissions) |
+| [Testing Repositories](https://developer.android.com/training/testing/local-tests) | [Camera Permissions Guide](https://developer.android.com/training/permissions/requesting) | [Maps API Key Setup](https://developers.google.com/maps/documentation/android-sdk/get-api-key) |
 
 ---
 
