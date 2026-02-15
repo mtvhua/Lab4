@@ -493,21 +493,20 @@ class AmiiboViewModel(
 
     fun fetchAmiibos() {
         viewModelScope.launch {
+            val currentAmiibos = _loadedAmiibos.value
             try {
                 repository.refreshAmiibos()
             } catch (e: Exception) {
                 val cached = _loadedAmiibos.value
                 _uiState.value = AmiiboUiState.Error(
                     message = "Error de conexión",
-                    cachedAmiibos = cached,
-                    errorType = ErrorType.NETWORK
+                    errorType = ErrorType.NETWORK,
+                    cachedAmiibos = currentAmiibos,
                     )
                 }
             }
         }
-    } // <---
-
-
+    }
 
 /**
  * ============================================================================

@@ -74,6 +74,15 @@ import com.curso.android.module3.amiibo.domain.error.ErrorType
 import com.curso.android.module3.amiibo.ui.viewmodel.AmiiboUiState
 import com.curso.android.module3.amiibo.ui.viewmodel.AmiiboViewModel
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.SnackbarResult
+import kotlinx.coroutines.launch
 
 /**
  * ============================================================================
@@ -143,10 +152,35 @@ fun AmiiboListScreen(
     val isLoadingMore by viewModel.isLoadingMore.collectAsStateWithLifecycle()
     val paginationError by viewModel.paginationError.collectAsStateWithLifecycle()
 
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    // SNACKBAR
+    LaunchedEffect(uiState) {
+        val state = uiState
+        // Solo disparamos si es Error Y tenemos datos previos (Graceful Offline)
+        if (state is AmiiboUiState.Error && state.cachedAmiibos.isNotEmpty()) {
+
+            // Usamos showSnackbar que devuelve un resultado
+            val result = snackbarHostState.showSnackbar(
+                message = state.message,
+                actionLabel = "Reintentar",
+                duration = SnackbarDuration.Short // Se quita solo rápido
+            )
+
+            // Si el usuario le da al botón "Reintentar" del Snackbar:
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.refreshAmiibos()
+            }
+        }
+    }
+
     // Estado para el dropdown del tamaño de página
     var showPageSizeDropdown by remember { mutableStateOf(false) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             /**
              * TopAppBar de Material 3.
@@ -222,97 +256,109 @@ fun AmiiboListScreen(
             )
         }
     ) { paddingValues ->
-        /**
-         * =====================================================================
-         * MANEJO DE ESTADOS CON WHEN EXHAUSTIVO
-         * =====================================================================
-         *
-         * when sobre sealed interface garantiza que manejemos TODOS los casos.
-         * Si agregas un nuevo estado al sealed interface, el compilador
-         * te obligará a manejarlo aquí.
-         *
-         * Esto elimina errores comunes como:
-         * - Olvidar manejar el estado de error
-         * - Estados inconsistentes (loading + error al mismo tiempo)
-         */
-        when (val state = uiState) {
-            // Estado de carga inicial
-            is AmiiboUiState.Loading -> {
-                LoadingContent(
-                    modifier = Modifier.padding(paddingValues)
-                )
-            }
-
-            // Estado de éxito con datos
-            is AmiiboUiState.Success -> {
-                /**
-                 * =====================================================================
-                 * PULL-TO-REFRESH (Material 3)
-                 * =====================================================================
-                 *
-                 * PullToRefreshBox es el componente oficial de Material 3 para
-                 * implementar el patrón "pull-to-refresh" (deslizar hacia abajo
-                 * para actualizar).
-                 *
-                 * CONCEPTO: Pull-to-Refresh
-                 * -------------------------
-                 * Es un patrón de UX muy común en apps móviles que permite al
-                 * usuario actualizar el contenido deslizando hacia abajo desde
-                 * la parte superior de la lista.
-                 *
-                 * Parámetros clave:
-                 * - isRefreshing: Controla si se muestra el indicador de carga
-                 * - onRefresh: Callback que se ejecuta cuando el usuario "suelta"
-                 *
-                 * VENTAJAS sobre LinearProgressIndicator manual:
-                 * 1. Animación nativa del sistema (familiar para el usuario)
-                 * 2. Gesture handling automático
-                 * 3. Integración con el scroll del contenido
-                 *
-                 * NOTA: Requiere @OptIn(ExperimentalMaterial3Api::class)
-                 */
-                PullToRefreshBox(
-                    isRefreshing = state.isRefreshing,
-                    onRefresh = { viewModel.refreshAmiibos() },
-                    modifier = Modifier.padding(paddingValues)
-                ) {
-                    // Grid de Amiibos con paginación
-                    AmiiboGrid(
-                        amiibos = state.amiibos,
-                        onAmiiboClick = onAmiiboClick,
-                        hasMorePages = hasMorePages,
-                        isLoadingMore = isLoadingMore,
-                        paginationError = paginationError,
-                        onLoadMore = { viewModel.loadNextPage() },
-                        onRetryLoadMore = { viewModel.retryLoadMore() },
-                        modifier = Modifier.fillMaxSize()
+        Column(modifier = Modifier.padding(paddingValues)) {
+            // barra de busqueda
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.onSearchQueryChange(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                placeholder = { Text("Buscar amiibo...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+            /**
+             * =====================================================================
+             * MANEJO DE ESTADOS CON WHEN EXHAUSTIVO
+             * =====================================================================
+             *
+             * when sobre sealed interface garantiza que manejemos TODOS los casos.
+             * Si agregas un nuevo estado al sealed interface, el compilador
+             * te obligará a manejarlo aquí.
+             *
+             * Esto elimina errores comunes como:
+             * - Olvidar manejar el estado de error
+             * - Estados inconsistentes (loading + error al mismo tiempo)
+             */
+            when (val state = uiState) {
+                // Estado de carga inicial
+                is AmiiboUiState.Loading -> {
+                    LoadingContent(
+                        modifier = Modifier.padding(paddingValues)
                     )
                 }
-            }
 
-            /**
-             * Estado de error con tipo específico.
-             *
-             * CONCEPTO: Errores Tipados en UI
-             * -------------------------------
-             * El estado de error ahora incluye:
-             * - errorType: Para mostrar iconos apropiados
-             * - isRetryable: Para decidir si mostrar botón de reintentar
-             *
-             * Esto mejora la UX porque:
-             * - El usuario ve un icono que representa el problema
-             * - Solo ve "Reintentar" cuando tiene sentido
-             */
-            is AmiiboUiState.Error -> {
-                if (state.cachedAmiibos.isNotEmpty()) {
-                    // Hay datos en cache: mostrar datos + mensaje de error
-                    Column(modifier = Modifier.padding(paddingValues)) {
-                        ErrorBanner(
-                            message = state.message,
-                            errorType = state.errorType,
-                            isRetryable = state.isRetryable,
-                            onRetry = { viewModel.refreshAmiibos() }
+                // Estado de éxito con datos
+                is AmiiboUiState.Success -> {
+                    /**
+                     * =====================================================================
+                     * PULL-TO-REFRESH (Material 3)
+                     * =====================================================================
+                     *
+                     * PullToRefreshBox es el componente oficial de Material 3 para
+                     * implementar el patrón "pull-to-refresh" (deslizar hacia abajo
+                     * para actualizar).
+                     *
+                     * CONCEPTO: Pull-to-Refresh
+                     * -------------------------
+                     * Es un patrón de UX muy común en apps móviles que permite al
+                     * usuario actualizar el contenido deslizando hacia abajo desde
+                     * la parte superior de la lista.
+                     *
+                     * Parámetros clave:
+                     * - isRefreshing: Controla si se muestra el indicador de carga
+                     * - onRefresh: Callback que se ejecuta cuando el usuario "suelta"
+                     *
+                     * VENTAJAS sobre LinearProgressIndicator manual:
+                     * 1. Animación nativa del sistema (familiar para el usuario)
+                     * 2. Gesture handling automático
+                     * 3. Integración con el scroll del contenido
+                     *
+                     * NOTA: Requiere @OptIn(ExperimentalMaterial3Api::class)
+                     */
+                    PullToRefreshBox(
+                        isRefreshing = state.isRefreshing,
+                        onRefresh = { viewModel.refreshAmiibos() },
+                        modifier = Modifier.padding(paddingValues)
+                    ) {
+                        // Grid de Amiibos con paginación
+                        AmiiboGrid(
+                            amiibos = state.amiibos,
+                            onAmiiboClick = onAmiiboClick,
+                            hasMorePages = hasMorePages,
+                            isLoadingMore = isLoadingMore,
+                            paginationError = paginationError,
+                            onLoadMore = { viewModel.loadNextPage() },
+                            onRetryLoadMore = { viewModel.retryLoadMore() },
+                            modifier = Modifier.fillMaxSize()
                         )
+                    }
+                }
+
+                /**
+                 * Estado de error con tipo específico.
+                 *
+                 * CONCEPTO: Errores Tipados en UI
+                 * -------------------------------
+                 * El estado de error ahora incluye:
+                 * - errorType: Para mostrar iconos apropiados
+                 * - isRetryable: Para decidir si mostrar botón de reintentar
+                 *
+                 * Esto mejora la UX porque:
+                 * - El usuario ve un icono que representa el problema
+                 * - Solo ve "Reintentar" cuando tiene sentido
+                 */
+                is AmiiboUiState.Error -> {
+                    if (state.cachedAmiibos.isNotEmpty()) {
+
+                            /*ErrorBanner(
+                                message = state.message,
+                                errorType = state.errorType,
+                                isRetryable = state.isRetryable,
+                                onRetry = { viewModel.refreshAmiibos() }
+                            )*/
                         AmiiboGrid(
                             amiibos = state.cachedAmiibos,
                             onAmiiboClick = onAmiiboClick,
@@ -323,22 +369,22 @@ fun AmiiboListScreen(
                             onRetryLoadMore = {},
                             modifier = Modifier.fillMaxSize()
                         )
+
+                    } else {
+                        // Sin cache: pantalla de error completa
+                        ErrorContent(
+                            message = state.message,
+                            errorType = state.errorType,
+                            isRetryable = state.isRetryable,
+                            onRetry = { viewModel.refreshAmiibos() },
+                            modifier = Modifier.padding(paddingValues)
+                        )
                     }
-                } else {
-                    // Sin cache: pantalla de error completa
-                    ErrorContent(
-                        message = state.message,
-                        errorType = state.errorType,
-                        isRetryable = state.isRetryable,
-                        onRetry = { viewModel.refreshAmiibos() },
-                        modifier = Modifier.padding(paddingValues)
-                    )
                 }
             }
         }
     }
 }
-
 /**
  * ============================================================================
  * COMPONENTES DE UI REUTILIZABLES
@@ -458,7 +504,7 @@ private fun ErrorType.toIcon(): ImageVector = when (this) {
  * @param errorType Tipo de error para mostrar icono apropiado
  * @param isRetryable Si true, muestra botón de reintentar
  */
-@Composable
+/*@Composable
 private fun ErrorBanner(
     message: String,
     errorType: ErrorType,
@@ -504,7 +550,7 @@ private fun ErrorBanner(
             }
         }
     }
-}
+} */
 
 /**
  * Grid de Amiibos con soporte para paginación infinita.
