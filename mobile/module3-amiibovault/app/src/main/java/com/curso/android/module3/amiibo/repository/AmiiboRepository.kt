@@ -58,6 +58,20 @@ class AmiiboRepository(
 ) {
 
     /**
+     * Busca amiibos por nombre en la base de datos (Parte 2 del Challenge)
+     */
+    fun searchAmiibos(query: String): Flow<List<AmiiboEntity>> {
+        return amiiboDao.searchAmiibos(query)
+    }
+
+    /**
+     * Obtiene los amiibos locales actuales (usado para Graceful Offline)
+     */
+    suspend fun getLocalAmiibos(): List<AmiiboEntity> {
+        return amiiboDao.getAmiibosPage(limit = 1000, offset = 0)
+    }
+
+    /**
      * =========================================================================
      * OBSERVAR AMIIBOS (FLUJO REACTIVO)
      * =========================================================================

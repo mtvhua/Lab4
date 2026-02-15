@@ -37,6 +37,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface AmiiboDao {
 
+    @Query("SELECT * FROM amiibos WHERE name LIKE '%' || :query || '%'") // para buscar los amiibos
+    fun searchAmiibos(query: String): Flow<List<AmiiboEntity>>
+
     /**
      * =========================================================================
      * QUERY: Obtener todos los Amiibos

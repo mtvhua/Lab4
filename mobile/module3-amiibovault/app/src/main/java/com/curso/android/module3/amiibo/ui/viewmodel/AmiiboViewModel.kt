@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
 
 /**
  * ============================================================================
@@ -474,7 +476,38 @@ class AmiiboViewModel(
             }
         }
     }
-}
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val amiibos = _searchQuery
+        .flatMapLatest { query ->
+            if (query.isBlank()) repository.observeAmiibos()
+            else repository.searchAmiibos(query)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun onSearchQueryChange(newQuery: String) {
+        _searchQuery.value = newQuery
+    }
+
+    fun fetchAmiibos() {
+        viewModelScope.launch {
+            try {
+                repository.refreshAmiibos()
+            } catch (e: Exception) {
+                val cached = _loadedAmiibos.value
+                _uiState.value = AmiiboUiState.Error(
+                    message = "Error de conexión",
+                    cachedAmiibos = cached,
+                    errorType = ErrorType.NETWORK
+                    )
+                }
+            }
+        }
+    } // <---
+
+
 
 /**
  * ============================================================================
